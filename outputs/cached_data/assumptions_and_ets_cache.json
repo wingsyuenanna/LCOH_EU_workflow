@@ -1,0 +1,57 @@
+{
+  "retrieved_date": "2026-05-28",
+  "eu_ets_prices_EUR_tCO2": {
+    "2007": 0.67,
+    "2008": 22.0,
+    "2009": 13.0,
+    "2010": 15.0,
+    "2011": 13.0,
+    "2012": 7.0,
+    "2013": 4.5,
+    "2014": 6.0,
+    "2015": 7.5,
+    "2016": 5.5,
+    "2017": 5.5,
+    "2018": 15.8,
+    "2019": 25.0,
+    "2020": 24.7,
+    "2021": 53.0,
+    "2022": 80.0,
+    "2023": 84.0,
+    "2024": 60.0,
+    "2025": 55.0
+  },
+  "technology_costs": {
+    "heat_pump_CAPEX_EUR_kW_th": 1200.0,
+    "heat_battery_CAPEX_EUR_kW_th": 150.0,
+    "gas_boiler_CAPEX_EUR_kW_th": 75.0,
+    "hp_cop": 2.8,
+    "hb_roundtrip_efficiency": 0.9,
+    "gas_boiler_efficiency": 0.9,
+    "hp_om_fraction": 0.025,
+    "hb_om_fraction": 0.005,
+    "gas_om_fraction": 0.015
+  },
+  "financial": {
+    "real_discount_rate": 0.08,
+    "project_life_years": 20,
+    "capacity_factor": 0.85,
+    "CRF": 0.10185
+  },
+  "conversion_factors": {
+    "TJ_to_MWh": 277.7777778,
+    "gas_GCV_to_LHV_factor": 1.1098,
+    "EUR_USD_2024": 0.921
+  },
+  "temperature_limits": {
+    "hp_max_temp_C": 120,
+    "hb_max_temp_C": 1500
+  },
+  "carbon_enabled": true,
+  "sources": {
+    "electricity_prices": "Eurostat nrg_pc_205 (API, retrieved 2026-05-28)",
+    "gas_prices": "Eurostat nrg_pc_203 (API, retrieved 2026-05-28)",
+    "eu_ets": "Approximate annual averages [UNVERIFIED] \u2014 verify vs EEX/ICE",
+    "tech_costs": "heatbattery_heatpump_info.md citing IRENA/NREL/BEIS [UNVERIFIED]"
+  }
+}

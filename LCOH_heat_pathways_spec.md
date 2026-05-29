@@ -1,18 +1,20 @@
 # Research Spec: Levelized Cost of Heat (LCOH) Comparison for Electric Heat vs Natural Gas (EU E-PRTR Facilities)
 
-**Version:** 1.2  
-**Date:** 2026-05-26  
+**Version:** 1.3.1  
+**Date:** 2026-05-28  
 **Status:** Draft
 
 ---
 
 ## 1. Objective
 
-For each EU industrial facility in the **E-PRTR-derived input dataset** (facility + fuel use), calculate and compare the levelized cost of heat (LCOH) for:
+For each EU industrial facility in the **E-PRTR-derived input dataset** (facility + fuel use), calculate and compare the levelized cost of heat (LCOH) for **eligible** pathways given inferred or reported process-heat temperature:
 
-1. Electrified heat via **heat pump**
-2. Electrified heat via **heat battery** (electric charging + thermal discharge)
-3. **Natural gas** baseline
+1. Electrified heat via **heat pump** — **low-temperature process heat only** (Section 3.5)
+2. Electrified heat via **heat battery** (electric charging + thermal discharge) — all temperature bands where process requirement ≤ reference max discharge temperature (A20; default 1500 °C for Rondo)
+3. **Natural gas** baseline — all temperature bands (always computed when heat demand is in scope)
+
+The workflow must assign a process-heat temperature band per facility, skip ineligible pathway calculations (rather than treating them as infinitely expensive), and compare `least_cost_pathway` across **eligible** pathways only.
 
 The workflow must retrieve current and recent fuel/electricity prices, capex and opex from approved web sources, convert all scenarios to a consistent unit basis, and produce transparent, auditable outputs where each assumption and external value is tied to a published document or official data source.
 
@@ -50,6 +52,7 @@ Each row represents one facility record containing E-PRTR facility metadata plus
 | Fuel-by-type TJ columns                     | Any of: `lcp_NaturalGas_TJ`, `lcp_Coal_TJ`, `lcp_Lignite_TJ`, `lcp_OtherSolidFuels_TJ`, `lcp_LiquidFuels_TJ`, `lcp_Peat_TJ`, `lcp_OtherGases_TJ`, `lcp_Biomass_TJ` |
 | `lcp_substitutable_thermal_TJ`              | Thermal energy eligible for electrification (TJ)                                                                                                                   |
 | `iso3_country`                              | If present; otherwise derive from `eprtr_country` via mapping table                                                                                                |
+| `process_heat_temp_C`                       | If present; reported or externally joined useful-heat supply temperature (°C)                                                                                    |
 
 
 ### 2.3 Accepted Table Shapes
@@ -64,8 +67,13 @@ The workflow must produce (per facility) the following derived fields before any
 - `analysis_year` (default = `eprtr_co2_year`)
 - `iso3_country` (if missing, derived from `eprtr_country`)
 - `current_fuel` (baseline fuel, derived from `lcp_*_TJ` fuel mix)
+- `process_heat_temp_band` (`low` | `mid` | `high`)
+- `process_heat_temp_C` (nullable; representative supply temperature when known or inferred)
+- `temp_provenance` (see Section 3.5.3)
+- `pathways_evaluated` (comma-separated eligible pathway codes, e.g. `gas,hb`)
+- `pathways_excluded` (ineligible pathways with reason codes)
 
-Derivation rules are defined in Section 6.6.
+Derivation rules for heat demand are defined in Section 6.6. Temperature band and pathway eligibility are defined in Sections 3.5 and 6.7.
 
 ---
 
@@ -78,9 +86,9 @@ Derivation rules are defined in Section 6.6.
 
 ### 3.2 Technologies in Scope
 
-- Heat pump pathway (electric input to useful heat via COP - Use one example of heat pump and use publish data on COP, capex and opex)
-- Heat battery pathway (electric input, charging/discharging losses included - Ideally use Rondo heat battery and use the public metrics on their charge and discharge)
-- Natural gas pathway (fuel input adjusted by boiler efficiency - same method as heat pumps, use one example of a gas boiler and use the capex and opex for that example)
+- **Heat pump pathway** (electric input to useful heat via COP) — use one published industrial high-temperature heat pump example for COP, capex, and opex. **In scope only for the Low temperature band** (Section 3.5); do not analyze heat pumps for mid- or high-temperature processes.
+- **Heat battery pathway** (electric input; charging/discharging losses included) — use **Rondo** (or equivalent) public charge/discharge metrics, including **maximum discharge temperature** (Rondo documents discharge up to **1500 °C**; capture URL in assumptions log). Eligible for **Low, Mid, and High** bands when `process_heat_temp_C` is unknown or ≤ A20. Heat pumps remain excluded for mid/high processes; heat batteries are not.
+- **Natural gas pathway** (fuel input adjusted by boiler efficiency) — use one published gas boiler example for capex and opex. **Baseline for all temperature bands.**
 
 ### 3.3 Cost Boundary
 
@@ -103,6 +111,48 @@ LCOH excludes unless explicitly added:
 - Primary output unit: `EUR/MWh_th useful heat`
 - Secondary optional unit: `USD/MMBtu`
 
+### 3.5 Process Heat Temperature and Pathway Eligibility
+
+Electrification technologies are not interchangeable across temperature levels. The workflow must assign each facility a **process heat temperature band** and compute LCOH only for eligible pathways.
+
+#### 3.5.1 Temperature bands (default taxonomy)
+
+| Band    | Typical useful-heat supply temperature | Representative uses                                              |
+| ------- | -------------------------------------- | ---------------------------------------------------------------- |
+| **Low** | ≤ 120 °C                               | Drying, washing, low-pressure steam, hot water, many food plants   |
+| **Mid** | > 120 °C and ≤ 400 °C                  | Medium-pressure steam, chemicals, paper, parts of metals finishing |
+| **High** | > 400 °C                              | Cement clinker, glass melting, primary metals, high-temp furnaces |
+
+Bands refer to **useful heat delivery temperature** at the process boundary (not flue gas or ambient).
+
+#### 3.5.2 Technology eligibility (mandatory)
+
+| Pathway      | Low band | Mid band | High band |
+| ------------ | -------- | -------- | --------- |
+| Heat pump    | Eligible | Not eligible — skip HP LCOH | Not eligible — skip HP LCOH |
+| Heat battery | Eligible if process temp ≤ A20 (or unknown) | Eligible if process temp ≤ A20 (or unknown) | Eligible if process temp ≤ A20 (or unknown) |
+| Natural gas  | Eligible | Eligible | Eligible |
+
+**Heat pump rule:** Do not compute `lcoh_heat_pump_EUR_MWhth` for Mid or High band facilities. Set the value to null and add flag `[HP_NOT_APPLICABLE_TEMPERATURE]`. Do not include heat pump in `least_cost_pathway` for these facilities.
+
+**Heat battery rule:** Eligible across all temperature bands when the required process temperature is ≤ A20 (default **1500 °C**, per Rondo public specification). If `process_heat_temp_C` exceeds A20, skip HB LCOH, set null, and flag `[HB_NOT_APPLICABLE_TEMPERATURE]`. When temperature is inferred only from band (A21) and no `process_heat_temp_C` is set, evaluate HB for all bands (including High).
+
+#### 3.5.3 Assigning temperature band per facility
+
+Priority order:
+
+1. **Reported temperature** — if `process_heat_temp_C` is present in input or from an external join, map to band using Section 3.5.1 thresholds (≤120 °C → low; >120–400 °C → mid; >400 °C → high). Use A20 only for heat-battery pathway eligibility, not band assignment; set `temp_provenance = TEMP_FROM_DATA`.
+2. **Activity/sector mapping** — map `eprtr_activity` (and `nace_code` if available) to `low` / `mid` / `high` using assumption **A21**; set `temp_provenance = TEMP_INFERRED_FROM_ACTIVITY`.
+3. **Conservative default** — if activity is missing or unmapped, assign **mid**; set `temp_provenance = TEMP_DEFAULT_MID_BAND` (heat pump skipped; heat battery and gas still evaluated if otherwise eligible).
+
+Log mapping rationale and literature/source for A21 overrides.
+
+#### 3.5.4 Interaction with COP and reference technologies
+
+- Heat pump COP (A3) applies **only** when `process_heat_temp_band = low` and `process_heat_temp_C` (if set) ≤ A19.
+- Heat battery roundtrip efficiency and capex (A4, A7) apply when eligible under Section 3.5.2 (including High band facilities such as cement and steel, unless `process_heat_temp_C` > A20).
+- Natural gas baseline (A5, A8) applies for all bands.
+
 ---
 
 ## 4. Key Questions Per Facility
@@ -110,12 +160,13 @@ LCOH excludes unless explicitly added:
 The workflow must answer:
 
 1. What is the facility’s annual useful heat demand in scope?
-2. What are the computed LCOH values for heat pump, heat battery, and natural gas?
-3. Which pathway is lowest-cost under base assumptions?
-4. What share of each LCOH is energy/fuel vs capex vs O&M?
-5. Which assumptions most drive the result (sensitivity)?
-6. Which external fuel/power prices were used, from what source, and for what date range?
-7. Can each assumption be traced to a published document and verification status?
+2. What process heat temperature band was assigned, and which pathways were excluded as ineligible?
+3. What are the computed LCOH values for each **eligible** pathway (heat pump, heat battery, natural gas)?
+4. Which **eligible** pathway is lowest-cost under base assumptions?
+5. What share of each LCOH is energy/fuel vs capex vs O&M?
+6. Which assumptions most drive the result (sensitivity)?
+7. Which external fuel/power prices were used, from what source, and for what date range?
+8. Can each assumption be traced to a published document and verification status?
 
 ---
 
@@ -174,7 +225,9 @@ where `r` is real discount rate and `n` is project life in years.
 
 ### 6.3 Pathway-Specific Energy Input
 
-- Heat pump electricity use:  
+Apply only to pathways that pass eligibility gating (Section 6.7).
+
+- Heat pump electricity use (Low band only):  
 `Elec_MWh_HP = Annual_Useful_Heat_MWh_th / COP`
 - Heat battery electricity use:  
 `Elec_MWh_HB = Annual_Useful_Heat_MWh_th / Roundtrip_Efficiency`
@@ -234,6 +287,20 @@ If fuel use includes both process energy and heat and no substitutable thermal i
 - Log: fuel energy → allocation → efficiency → useful heat.
 - If allocation is required but activity/sector is missing, use a conservative default allocation and flag `[HEAT_SHARE_DEFAULT_USED]`.
 
+### 6.7 Pathway Eligibility Gating
+
+Before Sections 6.1–6.4 for pathway `p`:
+
+1. Resolve `process_heat_temp_band` and `process_heat_temp_C` per Section 3.5.3.
+2. Determine eligibility:
+   - `heat_pump`: only if band = `low` and (`process_heat_temp_C` is null or `process_heat_temp_C` ≤ A19).
+   - `heat_battery`: if `process_heat_temp_C` is null or `process_heat_temp_C` ≤ A20 (any band, including `high`).
+   - `natural_gas`: always when `annual_heat_demand_MWh_th` > 0.
+3. If pathway `p` is not eligible, skip CAPEX/O&M/energy/carbon for `p`; set `lcoh_*` to null; append exclusion reason to `pathways_excluded`.
+4. Set `pathways_evaluated` to the list of eligible pathway codes (e.g. `gas`, `gas,hb`, `gas,hp,hb`).
+5. For `least_cost_pathway`, use minimum LCOH over **eligible** pathways only. If only gas is eligible, `least_cost_pathway = natural_gas`.
+6. For `delta_vs_gas_hp_EUR_MWhth` and `delta_vs_gas_hb_EUR_MWhth`, compute only when both gas and the respective electrified pathway are eligible; otherwise null.
+
 ---
 
 ## 7. Assumptions Register (Mandatory Traceability)
@@ -261,7 +328,38 @@ Every hardcoded/default value requires an assumption ID and source citation.
 | A16 | Heat share of reported fuel use (when heat output not reported) | sector-dependent default    | fraction                | Published benchmark by sector or documented conservative rule |
 | A17 | Gas energy basis normalization (LHV vs HHV)                     | LHV unless documented       | basis                   | Documented conversion source or explicit metadata rule        |
 | A18 | Treatment of non-gas fuels in baseline                          | exclude unless mapped       | rule                    | Methodological rule + rationale                               |
+| A19 | Max useful heat temperature for heat pump pathway                 | 120                         | °C                      | Technology limit / industrial HP literature                   |
+| A20 | Max discharge temperature for reference heat battery (Rondo)      | 1500                        | °C                      | Rondo public specification (discharge up to 1500 °C); cite URL in assumptions log |
+| A21 | `eprtr_activity` → process heat temperature band                  | see table below             | band                    | Sector heat surveys, IEA/industrial decarb literature       |
 
+
+#### A21 Default mapping (`eprtr_activity` → band)
+
+Use exact match on `eprtr_activity` string as in E-PRTR. If no match, use parent prefix (e.g. `3(c)(i)` → try `3(c)(i)`, then `3(c)`, then `3`) before defaulting to **mid**.
+
+| `eprtr_activity` prefix or code | Band   | Rationale (summary) |
+| ------------------------------- | ------ | ------------------- |
+| `1` (energy / combustion)       | mid    | Mixed boilers and CHP; HP rarely applicable site-wide |
+| `2` (metals production)         | high   | Furnaces, smelting, hot rolling |
+| `3` (mineral industry)          | high   | Cement, lime, glass, ceramics calcination |
+| `4` (chemical industry)           | mid    | Steam-driven processes, typically &lt; 400 °C |
+| `5` (waste / metals-related)    | high   | Incineration and high-temp treatment where dominant |
+| `6` (other industrial)          | mid    | Sector-heterogeneous; refine with sub-code if known |
+| `7` (paper and wood)            | mid    | Paper drying/steam often 120–200 °C |
+| `8` (food and drink)            | low    | Pasteurization, cleaning, low-pressure steam |
+| `9` (surface treatment)         | mid    | Baths and ovens often mid-temperature |
+
+**Sub-code overrides** (apply before parent prefix fallback):
+
+| `eprtr_activity` | Band | Notes |
+| ---------------- | ---- | ----- |
+| `8(b)`, `8(b)(i)`, `8(b)(ii)`, `8(c)` | low | Food, drink, agricultural processing |
+| `3(c)`, `3(c)(i)`, `3(c)(ii)`, `3(c)(iii)` | high | Cement and mineral products |
+| `5(b)`, `5(a)`, `6(b)`, `6(a)` | high | Iron, steel, non-ferrous metals |
+| `2(b)`, `2(c)`, `2(e)(i)`, `2(e)(ii)` | high | Ferrous metal processes |
+| `1(c)` | mid | Combustion installations (generic industrial heat) |
+
+Document any facility-specific override in `assumptions_log.md` with source citation.
 
 Rules:
 
@@ -351,14 +449,16 @@ Required columns:
 
 - `eprtr_facility_id`, `eprtr_facility_name`, `eprtr_country`, `iso3_country`, `analysis_year`
 - `eprtr_activity`, `eprtr_lat`, `eprtr_lon`
+- `process_heat_temp_band`, `process_heat_temp_C`, `temp_provenance`
+- `pathways_evaluated`, `pathways_excluded`
 - `annual_heat_demand_MWh_th`
 - `annual_heat_demand_provenance`
 - `natural_gas_fuel_energy_MWh` (derived from `lcp_NaturalGas_TJ`; null if missing)
 - `lcp_total_TJ`, `lcp_substitutable_thermal_TJ`
-- `lcoh_heat_pump_EUR_MWhth`
-- `lcoh_heat_battery_EUR_MWhth`
+- `lcoh_heat_pump_EUR_MWhth` (null if not eligible; flag `[HP_NOT_APPLICABLE_TEMPERATURE]`)
+- `lcoh_heat_battery_EUR_MWhth` (null if not eligible; flag `[HB_NOT_APPLICABLE_TEMPERATURE]` when temp-limited)
 - `lcoh_natural_gas_EUR_MWhth`
-- `least_cost_pathway`
+- `least_cost_pathway` (minimum over **eligible** pathways only)
 - `delta_vs_gas_hp_EUR_MWhth`
 - `delta_vs_gas_hb_EUR_MWhth`
 - `elec_price_used_EUR_MWh`
@@ -407,7 +507,11 @@ Complete before publishing final outputs:
 
 ### Calculation Integrity
 
-- LCOH formula applied consistently across all pathways
+- LCOH formula applied consistently across all **eligible** pathways
+- Process heat temperature band assigned and `temp_provenance` flagged for every facility
+- No heat pump LCOH computed for Mid or High band (or when `process_heat_temp_C` > A19)
+- Heat battery skipped when process temperature exceeds A20
+- `least_cost_pathway` excludes ineligible technologies; null HP LCOH not treated as lowest cost
 - CRF inputs (`r`, `n`) logged per facility
 - Efficiency/COP values within plausible range and source-backed
 
@@ -428,6 +532,9 @@ Complete before publishing final outputs:
 ## 12. Agent Behavioral Constraints
 
 - Do not hallucinate numeric values; if unavailable, flag and stop pathway-specific result if required data is missing.
+- Do not compute heat pump LCOH when `process_heat_temp_band` is `mid` or `high`, or when `process_heat_temp_C` > A19.
+- Do not compute heat battery LCOH only when `process_heat_temp_C` > A20 (default 1500 °C). Do not exclude heat battery by temperature band alone.
+- Do not treat null ineligible-pathway LCOH as infinitely expensive in rankings; exclude from `least_cost_pathway`.
 - Do not use uncited defaults in final calculations.
 - Do not mix units without explicit conversion logging.
 - Do not overwrite primary-source values with secondary-source values without explicit flag.
@@ -435,4 +542,4 @@ Complete before publishing final outputs:
 
 ---
 
-*End of Research Spec v1.0*
+*End of Research Spec v1.3.1*

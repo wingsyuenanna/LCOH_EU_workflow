@@ -1,0 +1,15 @@
+caffeinate -i claude -p "Read and execute the research spec at ./LCOH_heat_pathways_spec.md. The input data is at ./inputs/eprtr_lcp_matched.csv and additional context in heatbattery_heatpump_info.md. Write all outputs to ./outputs/
+
+Make sure you detail the assumptions in an organized fashion. Store information as you go such as Eurostate API data or energy prices and technology costs so that if you hit research session limit, you can pick back up where you stopped. 
+
+Can you store any information that you get from the internet so that it can be easily accessed on another request to prevent rerequesting. 
+
+Every time you complete a major phase (price retrieval, LCOH calculation, 
+verification), append a one-line status update with timestamp to 
+./outputs/progress.log so I can monitor progress." \
+--allowedTools "Read,Write,Edit,Bash,WebSearch,WebFetch" \
+--output-format stream-json \
+--verbose \
+--include-partial-messages \
+| jq -r 'select(.type == "assistant") | .message.content[] | select(.type == "text") | .text' 2>/dev/null
+
