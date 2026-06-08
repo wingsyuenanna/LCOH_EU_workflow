@@ -1,0 +1,62 @@
+[2026-05-29T19:47:14Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-05-29T19:47:14Z] PHASE_1_DONE: BNEF off-grid 394 country-years, HB CAPEX 394, gas 619 records
+[2026-05-29T19:47:14Z] PHASE_2_START: Processing 3591 facilities
+[2026-05-29T19:47:14Z] PHASE_2_DONE: Processed 1759 facilities, skipped 1832 (no heat data)
+[2026-05-29T19:47:14Z] PHASE_3_START: Writing output files
+[2026-05-29T19:47:14Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-05-29T19:47:14Z] PHASE_3_PRICE_LOG: Wrote 3518 price log rows
+[2026-05-29T19:47:14Z] PHASE_4_START: Computing summary statistics
+[2026-05-29T19:47:14Z] PHASE_4_DONE: Computed LCOH for 1759 facilities with gas, 47 with HP, 1759 with HB
+[2026-05-29T19:47:14Z] PHASE_3_DONE: All output files written
+[2026-05-29T19:47:14Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=70.8 | HB avg=157.5 | Least-cost breakdown: gas=1714 HP=27 HB=18
+
+## LCOH Off-Grid Electricity Run — Spec v1.4.0 Complete
+
+**Outputs written to `./outputs/`:**
+| File | Contents |
+|------|----------|
+| `lcoh_results.csv` | 3,591 rows — 33 columns including new `bnef_data_source`, `bnef_year_used`, `lcoh_confidence` |
+| `price_sources_log.csv` | 5,277 price lookup records |
+| `cross_run_comparison.csv` | 860 flagged cross-run anomalies |
+| `assumptions_log.md` | Full assumption register with sources (spec v1.4.0) |
+| `method_summary.md` | Formulas, BNEF coverage, confidence/plausibility tables |
+| `verification_report.md` | Checklist + §9.2.1 plausibility check + §9.2.3 cross-run |
+
+**Key v1.3.1 → v1.4.0 corrections:**
+- **Critical methodology fix:** Heat battery now uses **PV-only electricity** (no BESS) instead of PV+BESS. HB avg LCOH dropped from ~157.5 to **45.2 EUR/MWh_th** — this is the correct value since the heat battery itself is the storage device.
+- Added `bnef_data_source`, `bnef_year_used`, `lcoh_confidence` columns per spec §5.1.3, §6.8
+- BNEF year mapping corrected to explicit rule (≤2027 → 2025; ≥2028 → 2030)
+- A15 widened to 50% per spec note
+- Literature plausibility check (§9.2.1) and cross-run comparison (§9.2.3) added
+
+**Key results (1,759 facilities with LCOH computed):**
+- Heat battery is least-cost for **1,448 facilities** (avg 45.2 EUR/MWh_th vs gas avg 80.7) — driven by cheap off-grid PV (~38–47 EUR/MWh for most EU countries, no BESS needed)
+- HIGH confidence = 0 (all analysis years are 2017–2022, all proxied to BNEF 2025; MEDIUM is the practical maximum)
+- 103 gas LCOH outliers (>130 EUR/MWh_th), 268 HB outliers (<40 EUR/MWh_th mostly southern EU), 136 electricity LCOE outliers (GBR PV+BESS just over 160 USD/MWh threshold)[2026-06-08T17:51:55Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-06-08T17:51:55Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-08T17:51:55Z] PHASE_1_DONE: BNEF PV-only 394 country-years, HP (PV+BESS) 394 country-years, HB CAPEX 394, gas 619 records
+[2026-06-08T17:51:55Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-08T17:51:55Z] PHASE_2_DONE: Processed 1759 facilities, skipped 1832 (no heat data)
+[2026-06-08T17:51:55Z] PHASE_3_START: Writing output files
+[2026-06-08T17:51:55Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-08T17:51:55Z] PHASE_3_PRICE_LOG: Wrote 5277 price log rows
+[2026-06-08T17:51:55Z] PHASE_4_START: Computing summary statistics
+[2026-06-08T17:51:55Z] PHASE_4_DONE: Computed LCOH for 1759 facilities with gas, 47 with HP, 1759 with HB
+[2026-06-08T17:51:56Z] PHASE_4_CROSSRUN: Cross-run comparison done; 860 flagged facilities
+[2026-06-08T17:51:56Z] PHASE_3_CROSSRUN_CSV: Wrote 860 cross-run comparison rows
+[2026-06-08T17:51:56Z] PHASE_3_DONE: All output files written
+[2026-06-08T17:51:56Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=70.8 | HB avg=45.2 | Least-cost breakdown: gas=311 HP=0 HB=1448 | Confidence: HIGH=0 MEDIUM=1203 LOW=556 NOT_COMPUTED=1832
+[2026-06-08T18:20:25Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-06-08T18:20:25Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-08T18:20:25Z] PHASE_1_DONE: BNEF PV-only 394 country-years, HP (PV+BESS) 394 country-years, HB CAPEX 394, gas 619 records
+[2026-06-08T18:20:26Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-08T18:20:26Z] PHASE_2_DONE: Processed 1759 facilities, skipped 1832 (no heat data)
+[2026-06-08T18:20:26Z] PHASE_3_START: Writing output files
+[2026-06-08T18:20:26Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-08T18:20:26Z] PHASE_3_PRICE_LOG: Wrote 5277 price log rows
+[2026-06-08T18:20:26Z] PHASE_4_START: Computing summary statistics
+[2026-06-08T18:20:26Z] PHASE_4_DONE: Computed LCOH for 1759 facilities with gas, 47 with HP, 1759 with HB
+[2026-06-08T18:20:26Z] PHASE_4_CROSSRUN: Cross-run comparison done; 860 flagged facilities
+[2026-06-08T18:20:26Z] PHASE_3_CROSSRUN_CSV: Wrote 860 cross-run comparison rows
+[2026-06-08T18:20:26Z] PHASE_3_DONE: All output files written
+[2026-06-08T18:20:26Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=70.8 | HB avg=45.2 | Least-cost breakdown: gas=311 HP=0 HB=1448 | Confidence: HIGH=0 MEDIUM=1203 LOW=556 NOT_COMPUTED=1832

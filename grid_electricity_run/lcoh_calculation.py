@@ -14,13 +14,17 @@ import csv
 import json
 import math
 import os
+import re
 import sys
 from datetime import datetime
 from collections import defaultdict
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-INPUT_CSV  = os.path.join(BASE_DIR, "inputs", "eprtr_lcp_matched.csv")
+REPO_ROOT  = os.path.dirname(BASE_DIR)  # LCOH_EU_workflow/ (shared inputs live here)
+INPUTS_DIR   = os.path.join(REPO_ROOT, "inputs")
+INPUT_CSV    = os.path.join(INPUTS_DIR, "eprtr_lcp_matched.csv")
+EPSILON_CSV  = os.path.join(INPUTS_DIR, "eprtr_epsilon_reference.csv")
 OUT_DIR    = os.path.join(BASE_DIR, "outputs")
 CACHE_DIR  = os.path.join(OUT_DIR, "cached_data")
 ELEC_CSV   = os.path.join(CACHE_DIR, "eurostat_electricity_prices_all_years.csv")
@@ -227,13 +231,98 @@ def get_price(price_dict, geo, year, geo_fallback="EU27_2020"):
         return price_dict[(geo_fallback, nearest)], nearest, "[PRICE_FALLBACK_EU_AVERAGE_YEAR_PROXIED]"
     return None, None, "[PRICE_NOT_AVAILABLE]"
 
+# ── E2. Epsilon (Fuel-to-Heat Conversion) ─────────────────────────────────────
+
+def _expand_epsilon_code(raw_code):
+    """Expand compound codes like '2(e)/(f)' to a list of matchable activity codes."""
+    code = raw_code.split(" - ")[0].strip()
+    if "/" not in code:
+        return [code]
+
+    results = []
+    parts = code.split("/")
+    first = parts[0].strip()
+    results.append(first)
+
+    parent_match = re.match(r'^(\d+)', first)
+    parent_num = parent_match.group(1) if parent_match else ""
+
+    for part in parts[1:]:
+        part = part.strip()
+        if not part.startswith("("):
+            continue
+        range_match = re.match(r'\((\w+)\)\((\w+)-(\w+)\)', part)
+        if range_match:
+            main_sub, range_start, range_end = range_match.group(1), range_match.group(2), range_match.group(3)
+            roman_nums = ["i", "ii", "iii", "iv", "v", "vi"]
+            try:
+                s_idx, e_idx = roman_nums.index(range_start), roman_nums.index(range_end)
+            except ValueError:
+                continue
+            base = f"{parent_num}({main_sub})"
+            if base not in results:
+                results.append(base)
+            for r in roman_nums[s_idx:e_idx + 1]:
+                results.append(f"{base}({r})")
+        elif "(" in part:
+            results.append(f"{parent_num}{part}")
+        else:
+            sub_match = re.match(r'\((\w+)\)', part)
+            if sub_match:
+                results.append(f"{parent_num}({sub_match.group(1)})")
+
+    return list(dict.fromkeys(results))
+
+
+def load_epsilon_table(epsilon_csv):
+    """Load activity→epsilon_recommended from eprtr_epsilon_reference.csv."""
+    epsilon_map = {}
+    with open(epsilon_csv, newline="", encoding="latin-1") as f:
+        for row in csv.DictReader(f):
+            raw_code = row.get("eprtr_activity", "").strip()
+            eps_str  = row.get("epsilon_recommended", "").strip()
+            if not raw_code or not eps_str:
+                continue
+            try:
+                eps_val = float(eps_str)
+            except ValueError:
+                continue
+            for code in _expand_epsilon_code(raw_code):
+                if code not in epsilon_map:  # first row wins (general before H2-specific)
+                    epsilon_map[code] = eps_val
+    return epsilon_map
+
+
+def get_activity_epsilon(activity, epsilon_map):
+    """
+    Return (epsilon, provenance) for activity.
+    Falls back via parent-code trimming then to A5 default.
+    """
+    if not activity:
+        return ASSUMPTIONS["A5"]["value"], "EPSILON_DEFAULT_A5"
+    act = activity.strip()
+    if act in epsilon_map:
+        return epsilon_map[act], "EPSILON_FROM_TABLE"
+    # Progressively strip trailing sub-codes: "4(a)(i)" → "4(a)" → "4"
+    candidate = act
+    while True:
+        new_candidate = re.sub(r'\([^()]+\)$', '', candidate)
+        if new_candidate == candidate:
+            break
+        candidate = new_candidate
+        if candidate in epsilon_map:
+            return epsilon_map[candidate], "EPSILON_FROM_TABLE_PREFIX"
+    return ASSUMPTIONS["A5"]["value"], "EPSILON_DEFAULT_A5"
+
+
 # ── F. Heat Demand Derivation ─────────────────────────────────────────────────
 TJ_TO_MWH = 277.7777778
 
-def derive_heat_demand(row):
+def derive_heat_demand(row, epsilon=None):
     """
     Returns (annual_heat_demand_MWh_th, provenance, flags).
     Section 6.6 priority: substitutable_thermal > NaturalGas_TJ > lcp_total_TJ.
+    epsilon (fuel-to-heat conversion) is applied to all three fuel-input paths.
     """
     def safe_float(v):
         try:
@@ -244,18 +333,19 @@ def derive_heat_demand(row):
     sub_tj    = safe_float(row.get("lcp_substitutable_thermal_TJ"))
     gas_tj    = safe_float(row.get("lcp_NaturalGas_TJ"))
     total_tj  = safe_float(row.get("lcp_total_TJ"))
-    eff_gas   = ASSUMPTIONS["A5"]["value"]
+    if epsilon is None:
+        epsilon = ASSUMPTIONS["A5"]["value"]
     hs        = ASSUMPTIONS["A16"]["value"]
 
     if sub_tj > 0:
-        return sub_tj * TJ_TO_MWH, "HEAT_DEMAND_FROM_SUBSTITUTABLE_THERMAL", []
+        return sub_tj * TJ_TO_MWH * epsilon, "HEAT_DEMAND_FROM_SUBSTITUTABLE_THERMAL", []
 
     if gas_tj > 0:
-        return gas_tj * TJ_TO_MWH * eff_gas, "HEAT_DEMAND_INFERRED_FROM_GAS_FUEL", []
+        return gas_tj * TJ_TO_MWH * epsilon, "HEAT_DEMAND_INFERRED_FROM_GAS_FUEL", []
 
     if total_tj > 0:
         flags = ["HEAT_SHARE_DEFAULT_USED"]
-        return total_tj * TJ_TO_MWH * hs * eff_gas, "HEAT_DEMAND_INFERRED_FROM_TOTAL_FUEL", flags
+        return total_tj * TJ_TO_MWH * hs * epsilon, "HEAT_DEMAND_INFERRED_FROM_TOTAL_FUEL", flags
 
     return None, "NO_HEAT_DATA", ["HEAT_DEMAND_MISSING"]
 
@@ -375,6 +465,9 @@ def main():
     elec_prices, gas_prices = load_prices(ELEC_CSV, GAS_CSV)
     log_progress(f"PHASE_1_DONE: Loaded {len(elec_prices)} elec + {len(gas_prices)} gas price records")
 
+    epsilon_table = load_epsilon_table(EPSILON_CSV)
+    log_progress(f"PHASE_1_EPSILON: Loaded {len(epsilon_table)} activity→epsilon mappings")
+
     # Build EU27 averages as fallback for each year (weighted average not possible
     # without consumption weights, so simple mean of countries)
     eu_geos_elec = set()
@@ -423,8 +516,11 @@ def main():
         iso3     = COUNTRY_TO_ISO3.get(country, "???")
         geo_code = COUNTRY_TO_EUROSTAT.get(country, "???")
 
+        # Epsilon lookup (fuel-to-heat conversion, sector-specific)
+        epsilon_val, epsilon_prov = get_activity_epsilon(activity, epsilon_table)
+
         # Derive heat demand
-        heat_demand_MWh, heat_prov, heat_flags = derive_heat_demand(fac)
+        heat_demand_MWh, heat_prov, heat_flags = derive_heat_demand(fac, epsilon=epsilon_val)
 
         if heat_demand_MWh is None or heat_demand_MWh <= 0:
             no_heat_data += 1
@@ -454,7 +550,9 @@ def main():
                 "delta_vs_gas_hb_EUR_MWhth": None,
                 "elec_price_used_EUR_MWh": None,
                 "gas_price_used_EUR_MWh": None,
-                "assumptions_used": "A1,A2,A5",
+                "epsilon_used": epsilon_val,
+                "epsilon_provenance": epsilon_prov,
+                "assumptions_used": "A1,A2,A5,A_EPSILON",
                 "verification_status": "SKIPPED_NO_HEAT",
                 "flags": "|".join(heat_flags + ["NO_HEAT_DATA"]),
             })
@@ -556,7 +654,7 @@ def main():
         if gas_flag:  all_flags.append(gas_flag)
         all_flags = [f for f in all_flags if f]  # remove empties
 
-        assumptions_used = "A1,A2,A3,A4,A5,A6,A7,A8,A9_hp,A9_hb,A9_gas,A10,A16,A17"
+        assumptions_used = "A1,A2,A3,A4,A5,A6,A7,A8,A9_hp,A9_hb,A9_gas,A10,A16,A17,A_EPSILON"
 
         verification_status = "COMPUTED"
         if "[PRICE_NOT_AVAILABLE]" in all_flags:
@@ -591,6 +689,8 @@ def main():
             "delta_vs_gas_hb_EUR_MWhth":      delta_hb,
             "elec_price_used_EUR_MWh":        round(elec_EUR_MWh, 3) if elec_EUR_MWh else None,
             "gas_price_used_EUR_MWh":         round(gas_EUR_MWh,  3) if gas_EUR_MWh  else None,
+            "epsilon_used":                  epsilon_val,
+            "epsilon_provenance":            epsilon_prov,
             "assumptions_used":              assumptions_used,
             "verification_status":           verification_status,
             "flags":                         "|".join(all_flags) if all_flags else "",
@@ -639,6 +739,7 @@ def main():
         "lcoh_natural_gas_EUR_MWhth", "least_cost_pathway",
         "delta_vs_gas_hp_EUR_MWhth", "delta_vs_gas_hb_EUR_MWhth",
         "elec_price_used_EUR_MWh", "gas_price_used_EUR_MWh",
+        "epsilon_used", "epsilon_provenance",
         "assumptions_used", "verification_status", "flags",
     ]
     with open(results_file, "w", newline="", encoding="utf-8") as f:

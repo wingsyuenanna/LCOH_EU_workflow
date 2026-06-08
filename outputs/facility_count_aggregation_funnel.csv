@@ -1,0 +1,7 @@
+step,criterion,facilities,pct_of_previous,pct_of_total
+1,All facilities in eprtr_lcp_matched.csv,3591,100.0,100.0
+2,LCP matched (spatial_nearest or id_direct),1972,54.9,54.9
+3,"… of which: id_direct (identifier match, not spatial)",528,26.8,14.7
+4,… id_direct + eprtr_co2_year = 2024,353,66.9,9.8
+5,… id_direct + 2024 + non-1(c) (exclude eprtr_activity 1(c)*),115,32.6,3.2
+5b,… same cohort with LCOH COMPUTED (off-grid/grid results),110,95.7,3.1

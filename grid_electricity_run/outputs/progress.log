@@ -70,4 +70,31 @@ All outputs are written and cached. Here's a summary of what was completed:
 - **1% heat pump cheapest** — 19 food/drink (8b) facilities in cheap-electricity countries
 - **Avg LCOH:** gas 80.7 | heat pump 79.3 | heat battery 180.3 EUR/MWh_th
 
-**Unresolved items flagged for manual verification:** EU ETS prices, tech CAPEX sources (secondary only), grid emission factors, and prices for CH/NO/IS (EU27 average used as fallback).
+**Unresolved items flagged for manual verification:** EU ETS prices, tech CAPEX sources (secondary only), grid emission factors, and prices for CH/NO/IS (EU27 average used as fallback).[2026-06-08T17:51:17Z] PHASE_1_START: Loading price data from Eurostat cache
+[2026-06-08T17:51:17Z] PHASE_1_DONE: Loaded 722 elec + 619 gas price records
+[2026-06-08T17:51:51Z] PHASE_1_START: Loading price data from Eurostat cache
+[2026-06-08T17:51:51Z] PHASE_1_DONE: Loaded 722 elec + 619 gas price records
+[2026-06-08T17:51:51Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-08T17:51:51Z] PHASE_1_PRICES: Building price source log
+[2026-06-08T17:51:51Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-08T17:51:51Z] PHASE_2_DONE: Processed 1759 facilities, skipped 1832 (no heat data)
+[2026-06-08T17:51:51Z] PHASE_3_START: Writing output files
+[2026-06-08T17:51:51Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-08T17:51:51Z] PHASE_3_PRICE_LOG: Wrote 3518 price log rows
+[2026-06-08T17:51:51Z] PHASE_4_START: Computing summary statistics
+[2026-06-08T17:51:51Z] PHASE_4_DONE: Computed LCOH for 1759 facilities with gas, 47 with HP, 1759 with HB
+[2026-06-08T17:51:51Z] PHASE_3_DONE: All output files written
+[2026-06-08T17:51:51Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=79.3 | HB avg=180.3 | Least-cost breakdown: gas=1597 HP=19 HB=143
+[2026-06-08T18:20:25Z] PHASE_1_START: Loading price data from Eurostat cache
+[2026-06-08T18:20:25Z] PHASE_1_DONE: Loaded 722 elec + 619 gas price records
+[2026-06-08T18:20:25Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-08T18:20:25Z] PHASE_1_PRICES: Building price source log
+[2026-06-08T18:20:25Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-08T18:20:25Z] PHASE_2_DONE: Processed 1759 facilities, skipped 1832 (no heat data)
+[2026-06-08T18:20:25Z] PHASE_3_START: Writing output files
+[2026-06-08T18:20:25Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-08T18:20:25Z] PHASE_3_PRICE_LOG: Wrote 3518 price log rows
+[2026-06-08T18:20:25Z] PHASE_4_START: Computing summary statistics
+[2026-06-08T18:20:25Z] PHASE_4_DONE: Computed LCOH for 1759 facilities with gas, 47 with HP, 1759 with HB
+[2026-06-08T18:20:25Z] PHASE_3_DONE: All output files written
+[2026-06-08T18:20:25Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=79.3 | HB avg=180.3 | Least-cost breakdown: gas=1597 HP=19 HB=143

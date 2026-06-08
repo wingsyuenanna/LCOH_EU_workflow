@@ -1,0 +1,8 @@
+caffeinate -i claude -p "Read and execute the research spec at ./LCOH_heat_pathways_spec.md and ./README.md (off-grid electricity variant). The input data is at ../inputs/eprtr_lcp_matched.csv and ../inputs/bnef_country_costs.csv (repo root, not under off_grid_electricity_run/). Use off_grid_electricity_run/lcoh_calculation.py for BNEF PV+BESS electricity pricing. Write all outputs to ./outputs/
+
+Make sure you detail the assumptions in an organized fashion. Store information as you go. Every time you complete a major phase, append a one-line status update with timestamp to ./outputs/progress.log. Also append the agent's output into the log file." \
+--allowedTools "Read,Write,Edit,Bash,WebSearch,WebFetch" \
+--output-format stream-json \
+--verbose \
+--include-partial-messages \
+| jq -r 'select(.type == "assistant") | .message.content[] | select(.type == "text") | .text' 2>/dev/null

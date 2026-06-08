@@ -2,3 +2,12 @@ matplotlib
 numpy
 pandas
 seaborn
+folium
+
+# Solar feasibility extension (off_grid_electricity_run/scripts/)
+requests          # PVGIS API calls
+timezonefinder   # local timezone conversion for hourly profiles
+openpyxl         # reading EEA Excel source files
+
+# Optional — required only for GEE land availability step
+# earthengine-api  # pip install earthengine-api && earthengine authenticate

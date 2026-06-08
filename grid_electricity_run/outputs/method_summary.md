@@ -1,5 +1,5 @@
 # LCOH EU Workflow — Method Summary
-**Generated:** 2026-05-28T21:59:33Z
+**Generated:** 2026-06-08T18:20:25Z
 **Spec:** v1.3.1
 **Facilities in input:** 3591
 **Facilities with heat demand:** 1759

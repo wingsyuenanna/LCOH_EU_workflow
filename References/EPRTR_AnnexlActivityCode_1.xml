@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="EPRTR_LOVStylesheet.xsl" type="text/xsl"?>
+<!--E-PRTR annexlActivityCodes $Revision: 6666 $  $Date: 2009-03-05 10:17:10 +0100 (to, 05 mar 2009) $ -->
+<ListOfValues>
+    <Title>Annex I Activity Codes</Title>
+    <Description>Definition of Annex I activities according to Regulation 166/2006 Annex I.</Description>
+    <Version>1.1</Version>
+    <ValidSince>2009-03-05</ValidSince>
+    <Code name="Mineral oil and gas refineries" ippcCode="1.2">1.(a)</Code>
+    <Code name="Installations for gasification and liquefaction" ippcCode="1.4">1.(b)</Code>
+    <Code name="Thermal power stations and other combustion installations" ippcCode="1.1">1.(c)</Code>
+    <Code name="Coke ovens" ippcCode="1.3">1.(d)</Code>
+    <Code name="Coal rolling mills" ippcCode="">1.(e)</Code>
+    <Code name="Installations for the manufacture of coal products and solid smokeless fuel" ippcCode="">1.(f)</Code>
+    <Code name="Metal ore (including sulphide ore) roasting or sintering installations" ippcCode="2.1">2.(a)</Code>
+    <Code name="Installations for the production of pig iron or steel (primary or secondary melting) including continuous casting" ippcCode="2.2">2.(b)</Code>
+    <Code name="Installations for the processing of ferrous metals" ippcCode="2.3">2.(c)</Code>
+    <Code name="- Hot-rolling mills" ippcCode="2.3.(a)">2.(c).(i)</Code>
+    <Code name="- Smitheries with hammers" ippcCode="2.3.(b)">2.(c).(ii)</Code>
+    <Code name="- Application of protective fused metal coats" ippcCode="2.3.(c)">2.(c).(iii)</Code>
+    <Code name="Ferrous metal foundries" ippcCode="2.4">2.(d)</Code>
+    <Code name="Installations:" ippcCode="2.5">2.(e)</Code>
+    <Code name="- For the production of non-ferrous crude metals from ore, concentrates or secondary raw materials by metallurgical, chemical or electrolytic processes" ippcCode="2.5.(a)">2.(e).(i)</Code>
+    <Code name="- For the smelting, including the alloying, of non-ferrous metals, including recovered products (refining, foundry casting, etc.)" ippcCode="2.5.(b)">2.(e).(ii)</Code>
+    <Code name="Installations for surface treatment of metals and plastic materials using an electrolytic or chemical process" ippcCode="2.6">2.(f)</Code>
+    <Code name="Underground mining and related operations" ippcCode="">3.(a)</Code>
+    <Code name="Opencast mining and quarrying" ippcCode="">3.(b)</Code>
+    <Code name="Installations for the production of:" ippcCode="3.1">3.(c)</Code>
+    <Code name="- Cement clinker in rotary kilns" ippcCode="3.1">3.(c).(i)</Code>
+    <Code name="- Lime in rotary kilns" ippcCode="3.1">3.(c).(ii)</Code>
+    <Code name="- Cement clinker or lime in other furnaces" ippcCode="3.1">3.(c).(iii)</Code>
+    <Code name="Installations for the production of asbestos and the manufacture of asbestos-based products" ippcCode="3.2">3.(d)</Code>
+    <Code name="Installations for the manufacture of glass, including glass fibre" ippcCode="3.3">3.(e)</Code>
+    <Code name="Installations for melting mineral substances, including the production of mineral fibres" ippcCode="3.4">3.(f)</Code>
+    <Code name="Installations for the manufacture of ceramic products by firing, in particular roofing tiles, bricks, refractory bricks, tiles, stoneware or porcelain" ippcCode="3.5">3.(g)</Code>
+    <Code name="Chemical installations for the production on an industrial scale of basic organic chemicals, such as:" ippcCode="4.1">4.(a)</Code>
+    <Code name="- Simple hydrocarbons (linear or cyclic, saturated or unsaturated, aliphatic or aromatic)" ippcCode="4.1.(a)">4.(a).(i)</Code>
+    <Code name="- Oxygen-containing hydrocarbons" ippcCode="4.1.(b)">4.(a).(ii)</Code>
+    <Code name="- Sulphurous hydrocarbons" ippcCode="4.1.(c)">4.(a).(iii)</Code>
+    <Code name="- Nitrogenous hydrocarbons" ippcCode="4.1.(d)">4.(a).(iv)</Code>
+    <Code name="- Phosphorus-containing hydrocarbons" ippcCode="4.1.(e)">4.(a).(v)</Code>
+    <Code name="- Halogenic hydrocarbons" ippcCode="4.1.(f)">4.(a).(vi)</Code>
+    <Code name="- Organometallic compounds" ippcCode="4.1.(g)">4.(a).(vii)</Code>
+    <Code name="- Basic plastic materials (polymers, synthetic fibres and cellulose-based fibres)" ippcCode="4.1.(h)">4.(a).(viii)</Code>
+    <Code name="- Synthetic rubbers" ippcCode="4.1.(i)">4.(a).(ix)</Code>
+    <Code name="- Dyes and pigments" ippcCode="4.1.(j)">4.(a).(x)</Code>
+    <Code name="- Surface-active agents and surfactants" ippcCode="4.1.(k)">4.(a).(xi)</Code>
+    <Code name="Chemical installations for the production on an industrial scale of basic inorganic chemicals, such as:" ippcCode="4.2">4.(b)</Code>
+    <Code name="- Gases" ippcCode="4.2.(a)">4.(b).(i)</Code>
+    <Code name="- Acids" ippcCode="4.2.(b)">4.(b).(ii)</Code>
+    <Code name="- Bases" ippcCode="4.2.(c)">4.(b).(iii)</Code>
+    <Code name="- Salts" ippcCode="4.2.(d)">4.(b).(iv)</Code>
+    <Code name="- Non-metals, metal oxides or other inorganic compounds" ippcCode="4.2.(e)">4.(b).(v)</Code>
+    <Code name="Chemical installations for the production on an industrial scale of phosphorous-, nitrogen- or potassium-based fertilisers (simple or compound fertilisers)" ippcCode="4.3">4.(c)</Code>
+    <Code name="Chemical installations for the production on an industrial scale of basic plant health products and of biocides" ippcCode="4.4">4.(d)</Code>
+    <Code name="Installations using a chemical or biological process for the production on an industrial scale of basic pharmaceutical products" ippcCode="4.5">4.(e)</Code>
+    <Code name="Installations for the production on an industrial scale of explosives and pyrotechnic products" ippcCode="4.6">4.(f)</Code>
+    <Code name="Installations for the recovery or disposal of hazardous waste" ippcCode="5.1">5.(a)</Code>
+    <Code name="Installations for the incineration of non-hazardous waste in the scope of Directive 2000/76/EC of the European Parliament and of the Council of 4 December 2000 on the incineration of waste" ippcCode="5.2">5.(b)</Code>
+    <Code name="Installations for the disposal of non-hazardous waste" ippcCode="5.3">5.(c)</Code>
+    <Code name="Landfills (see note in Guidance Document)" ippcCode="5.4">5.(d)</Code>
+    <Code name="Installations for the disposal or recycling of animal carcasses and animal waste" ippcCode="6.5">5.(e)</Code>
+    <Code name="Urban waste-water treatment plants" ippcCode="">5.(f)</Code>
+    <Code name="Independently operated industrial waste-water treatment plants which serve one or more activities of this annex" ippcCode="">5.(g)</Code>
+    <Code name="Industrial plants for the production of pulp from timber or similar fibrous materials" ippcCode="6.1.(a)">6.(a)</Code>
+    <Code name="Industrial plants for the production of paper and board and other primary wood products" ippcCode="6.1.(b)">6.(b)</Code>
+    <Code name="Industrial plants for the preservation of wood and wood products with chemicals" ippcCode="">6.(c)</Code>
+    <Code name="Installations for the intensive rearing of poultry or pigs" ippcCode="6.6">7.(a)</Code>
+    <Code name="- With 40 000 places for poultry" ippcCode="6.6.(a)">7.(a).(i)</Code>
+    <Code name="- With 2 000 places for production pigs (over 30kg)" ippcCode="6.6.(b)">7.(a).(ii)</Code>
+    <Code name="- With 750 places for sows" ippcCode="6.6.(c)">7.(a).(iii)</Code>
+    <Code name="Intensive aquaculture" ippcCode="">7.(b)</Code>
+    <Code name="Slaughterhouses" ippcCode="6.4">8.(a)</Code>
+    <Code name="Treatment and processing intended for the production of food and beverage products from:" ippcCode="">8.(b)</Code>
+    <Code name="- Animal raw materials (other than milk)" ippcCode="">8.(b).(i)</Code>
+    <Code name="- Vegetable raw materials" ippcCode="">8.(b).(ii)</Code>
+    <Code name="Treatment and processing of milk" ippcCode="">8.(c)</Code>
+    <Code name="Plants for the  pre-treatment (operations such as washing, bleaching, mercerisation) or dyeing of fibres or textiles" ippcCode="6.2">9.(a)</Code>
+    <Code name="Plants for the tanning of hides and skins" ippcCode="6.3">9.(b)</Code>
+    <Code name="Installations for the surface treatment of substances, objects or products using organic solvents, in particular for dressing, printing, coating, degreasing, waterproofing, sizing, painting, cleaning or impregnating" ippcCode="6.7">9.(c)</Code>
+    <Code name="Installations for the production of carbon (hard-burnt coal) or electro-graphite by means of incineration or graphitisation" ippcCode="6.8">9.(d)</Code>
+    <Code name="Installations for the building of, and painting or removal of paint from ships" ippcCode="">9.(e)</Code>
+</ListOfValues>
