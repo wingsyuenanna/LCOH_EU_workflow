@@ -1,0 +1,10 @@
+Year,2025,2030
+Thermal CAPEX $/kWh,100.0,90.0
+Thermal OPEX frac/yr,0.02,0.02
+Thermal Lifetime yr,25.0,25.0
+Thermal Discount rate,0.07,0.07
+Thermal Eff <=200C,0.98,0.98
+Thermal Eff >200C,0.95,0.95
+Thermal T_max C,1500.0,1500.0
+Thermal T_min C,1200.0,1200.0
+Thermal Charge/Discharge ratio min,4.0,4.0

@@ -31,6 +31,19 @@ Key methodology:
   Land feasibility (when suitable_land.csv is available):
     FEASIBLE   : land_needed_km2 <= suitable_land_km2
     INFEASIBLE  : land_needed_km2 > suitable_land_km2
+
+  Overlap adjustment (Option B — demand-proportional):
+    For each pair of facilities whose 10 km buffers overlap (centres < 20 km
+    apart), the geometric intersection area is computed analytically.  The
+    suitable land within that intersection is estimated by averaging each
+    facility's suitability fraction (suitable_land / total_buffer_area) applied
+    to the overlap area.  The shared suitable land is then reallocated in
+    proportion to each facility's heat demand.  Every facility's
+    suitable_land_adj_km2 = suitable_land_km2 + Σ_j (demand_allocation_j −
+    geographic_claim_j) across all overlapping neighbours j.  The total
+    suitable land across any overlapping pair is conserved; only the split
+    changes.  Original columns are kept for reference; _adj columns reflect
+    the corrected allocation.
 """
 
 import argparse
@@ -77,6 +90,7 @@ PROJECT_LIFE         = 20       # A2 years
 PROCESS_CF           = 0.85     # A_CF industrial capacity factor
 BNEF_YEAR            = 2025     # maps to analysis_year ≤ 2027 (spec §5.1.3)
 SOLAR_DENSITY_MW_KM2 = 10.0    # utility-scale PV density MW/km²
+BUFFER_R_KM          = 10.0    # radius of GEE land buffer (must match buffer_m=10000)
 
 OUTPUT_FIELDS = [
     # ── Run metadata ──
@@ -108,6 +122,12 @@ OUTPUT_FIELDS = [
     "suitable_land_km2",             # grassland + shrubland + bare_sparse (post WDPA/slope mask)
     "land_feasibility",              # FEASIBLE | INFEASIBLE | LAND_DATA_PENDING | NOT_COMPUTABLE
     "land_surplus_deficit_km2",      # suitable - needed (+ve = surplus, -ve = deficit)
+    # ── Overlap-adjusted land (Option B — demand-proportional) ──
+    "overlap_n_neighbours",          # number of facilities whose buffers overlap with this one
+    "overlap_area_total_km2",        # total geometric overlap area with all neighbours
+    "suitable_land_adj_km2",         # after demand-weighted reallocation of shared zones
+    "land_feasibility_adj",          # FEASIBLE | INFEASIBLE | NOT_COMPUTABLE (adjusted)
+    "land_surplus_deficit_adj_km2",  # adjusted surplus/deficit
     # ── Metadata ──
     "computation_status",
     "notes",
@@ -141,6 +161,131 @@ def site_lcoe_eur_mwh(bnef_annual_cost_usd_kw_yr, pvgis_cf, vom_usd_mwh=0.0):
         return None
     lcoe_usd = bnef_annual_cost_usd_kw_yr / (pvgis_cf * 8760 / 1000.0) + vom_usd_mwh
     return lcoe_usd * EUR_PER_USD
+
+# ── Overlap adjustment helpers ────────────────────────────────────────────────
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance in km between two (lat, lon) points."""
+    R = 6371.0
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(min(1.0, a)))
+
+
+def circle_overlap_km2(d, r):
+    """Area of intersection of two equal circles with radius r whose centres are d apart."""
+    if d >= 2 * r:
+        return 0.0
+    if d <= 0:
+        return math.pi * r * r
+    return 2 * r * r * math.acos(d / (2 * r)) - (d / 2) * math.sqrt(4 * r * r - d * d)
+
+
+def apply_overlap_adjustments(rows, buffer_r_km=BUFFER_R_KM):
+    """
+    For every pair of facilities whose buffers overlap, reallocate the shared
+    suitable land by heat demand ratio and write results back into each row.
+
+    Method per pair (i, j):
+      overlap_suitable = overlap_area × avg(S_i/B_i, S_j/B_j)
+      alloc_i          = overlap_suitable × H_i / (H_i + H_j)
+      geo_claim_i      = S_i × overlap_area / B_i
+      adj_i           += alloc_i − geo_claim_i          (zero-sum across pair)
+      adjusted_S_i     = max(0, S_i + Σ_j adj_i)
+
+    Variables: S = suitable_land_km2, B = total_buffer_area_km2, H = heat demand.
+    """
+    default_buffer_area = math.pi * buffer_r_km ** 2
+
+    # Pull numeric values needed for the computation from each row.
+    # Rows store rounded floats or ""; safe_float handles both.
+    def row_nums(r):
+        return {
+            "lat":      safe_float(r.get("latitude")),
+            "lon":      safe_float(r.get("longitude")),
+            "heat":     safe_float(r.get("annual_heat_demand_MWh_th")),
+            "suitable": safe_float(r.get("suitable_land_km2")),   # "PENDING" → None
+            "buffer":   safe_float(r.get("_total_buffer_km2")) or default_buffer_area,
+        }
+
+    nums   = {r["source_id"]: row_nums(r) for r in rows}
+    adj    = {r["source_id"]: 0.0 for r in rows}
+    n_nbrs = {r["source_id"]: 0   for r in rows}
+    ov_tot = {r["source_id"]: 0.0 for r in rows}
+
+    eligible_ids = [
+        fid for fid, n in nums.items()
+        if n["lat"] is not None and n["lon"] is not None
+        and (n["heat"] or 0) > 0
+        and n["suitable"] is not None
+    ]
+
+    for idx_i in range(len(eligible_ids)):
+        for idx_j in range(idx_i + 1, len(eligible_ids)):
+            fid_i, fid_j = eligible_ids[idx_i], eligible_ids[idx_j]
+            ni, nj = nums[fid_i], nums[fid_j]
+
+            d = haversine_km(ni["lat"], ni["lon"], nj["lat"], nj["lon"])
+            overlap_area = circle_overlap_km2(d, buffer_r_km)
+            if overlap_area <= 0:
+                continue
+
+            n_nbrs[fid_i] += 1
+            n_nbrs[fid_j] += 1
+            ov_tot[fid_i] += overlap_area
+            ov_tot[fid_j] += overlap_area
+
+            S_i, B_i = ni["suitable"], ni["buffer"]
+            S_j, B_j = nj["suitable"], nj["buffer"]
+            H_i, H_j = ni["heat"],     nj["heat"]
+
+            frac_i = S_i / B_i if B_i > 0 else 0.0
+            frac_j = S_j / B_j if B_j > 0 else 0.0
+
+            # Best estimate of suitable land within the shared zone
+            overlap_suitable = overlap_area * (frac_i + frac_j) / 2.0
+
+            # Demand-weighted allocation
+            H_total  = H_i + H_j
+            alloc_i  = overlap_suitable * H_i / H_total
+            alloc_j  = overlap_suitable * H_j / H_total
+
+            # Each facility's current geographic "claim" to the overlap
+            geo_i = S_i * (overlap_area / B_i) if B_i > 0 else 0.0
+            geo_j = S_j * (overlap_area / B_j) if B_j > 0 else 0.0
+
+            adj[fid_i] += alloc_i - geo_i
+            adj[fid_j] += alloc_j - geo_j
+
+    # Write adjusted values back into rows
+    for r in rows:
+        fid          = r["source_id"]
+        n            = nums[fid]
+        orig_suitable = n["suitable"]
+        land_needed   = safe_float(r.get("land_needed_km2"))
+
+        if orig_suitable is not None:
+            adj_suitable = max(0.0, orig_suitable + adj[fid])
+        else:
+            adj_suitable = None
+
+        if not (n["heat"] or 0):
+            feas_adj    = "NOT_COMPUTABLE"
+            surplus_adj = None
+        elif adj_suitable is not None and land_needed is not None:
+            surplus_adj = round(adj_suitable - land_needed, 2)
+            feas_adj    = "FEASIBLE" if adj_suitable >= land_needed else "INFEASIBLE"
+        else:
+            feas_adj    = r.get("land_feasibility", "NOT_COMPUTABLE")
+            surplus_adj = None
+
+        r["overlap_n_neighbours"]          = n_nbrs[fid]
+        r["overlap_area_total_km2"]        = round(ov_tot[fid], 4) if ov_tot[fid] > 0 else 0.0
+        r["suitable_land_adj_km2"]         = round(adj_suitable, 4) if adj_suitable is not None else ""
+        r["land_feasibility_adj"]          = feas_adj
+        r["land_surplus_deficit_adj_km2"]  = surplus_adj if surplus_adj is not None else ""
+
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 def load_csv_as_dict(path, key_col):
@@ -319,7 +464,15 @@ def main():
             "land_surplus_deficit_km2":          land_surplus if land_surplus is not None else "PENDING",
             "computation_status":                status,
             "notes":                             "|".join(notes),
+            # internal field (not in OUTPUT_FIELDS) used by apply_overlap_adjustments
+            "_total_buffer_km2":                 safe_float(ld_row.get("total_buffer_area_km2")),
         })
+
+    # Apply demand-proportional overlap adjustment (Option B)
+    print("\nComputing buffer-overlap adjustments (Option B — demand-proportional)...")
+    apply_overlap_adjustments(rows)
+    n_overlapping = sum(1 for r in rows if r.get("overlap_n_neighbours", 0) > 0)
+    print(f"  Facilities with ≥1 overlapping neighbour: {n_overlapping}")
 
     with open(OUT_CSV, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=OUTPUT_FIELDS, extrasaction="ignore")
@@ -331,6 +484,8 @@ def main():
     feasible   = [r for r in computed if r["land_feasibility"] == "FEASIBLE"]
     infeasible = [r for r in computed if r["land_feasibility"] == "INFEASIBLE"]
     pending    = [r for r in computed if r["land_feasibility"] == "LAND_DATA_PENDING"]
+    feas_adj   = [r for r in computed if r.get("land_feasibility_adj") == "FEASIBLE"]
+    inf_adj    = [r for r in computed if r.get("land_feasibility_adj") == "INFEASIBLE"]
 
     print(f"\n{'='*60}")
     print(f"Output: {OUT_CSV}")
@@ -347,10 +502,14 @@ def main():
         if deltas:
             cheaper = sum(1 for d in deltas if d < 0)
             print(f"  HB cheaper than gas: {cheaper}/{len(deltas)} sites")
-    print(f"Land feasibility:")
+    print(f"Land feasibility (unadjusted):")
     print(f"  FEASIBLE:          {len(feasible)}")
     print(f"  INFEASIBLE:        {len(infeasible)}")
     print(f"  LAND_DATA_PENDING: {len(pending)} (run GEE + process_land_availability.py then rerun)")
+    if feas_adj or inf_adj:
+        print(f"Land feasibility (overlap-adjusted, Option B):")
+        print(f"  FEASIBLE:          {len(feas_adj)}")
+        print(f"  INFEASIBLE:        {len(inf_adj)}")
     print(f"{'='*60}")
 
 
