@@ -114,7 +114,7 @@ def _infer_process_temperature_c(site_params: dict) -> tuple[float | None, str]:
 
 def main():
     parser = argparse.ArgumentParser(description="Run a scenario for solar+storage+gas optimization")
-    parser.add_argument("--site-id", type=int, required=True, help="Site number for this scenario")
+    parser.add_argument("--site-id", type=str, required=True, help="Site identifier (string source_id or integer)")
     parser.add_argument("--scenario-dir", required=True)
     parser.add_argument("--iso3-country", required=True)
     parser.add_argument("--availability", type=float, required=True)
@@ -124,6 +124,11 @@ def main():
     parser.add_argument("--peak-demand-cutoff", type=float, required=True)
     parser.add_argument("--sites-csv", default="inputs/sites.csv")
     parser.add_argument("--solar-data-folder", default="solar_data_parquet_v3")
+    parser.add_argument(
+        "--solar-local-folder",
+        default=str(_REPO_ROOT / "off_grid_electricity_run" / "outputs" / "pvgis_hourly"),
+        help="Local directory of PVGIS hourly CSVs. Used instead of S3 when the folder exists.",
+    )
     parser.add_argument("--demand-data-folder", default="inputs/demand")
     parser.add_argument(
         "--input-bnef-costs",
@@ -228,13 +233,16 @@ def main():
     # gas_cap = site_params["ct_capacity_mw"] + site_params["ccgt_capacity_mw"]
     # print(f"Total gas capacity: {gas_cap} MW")
     
-    # Load solar 
+    # Load solar (local PVGIS hourly CSVs preferred; falls back to S3 if folder absent)
     from utils.loaders.load_solar import load_solar_profile
     solar_profile_df, solar_array = load_solar_profile(
         site_id=args.site_id,
-        year=2023,
+        year=args.solar_start,
         bucket_name="annaiecc",
-        folder_prefix=args.solar_data_folder
+        folder_prefix=args.solar_data_folder,
+        start_year=args.solar_start,
+        end_year=args.solar_end,
+        local_folder=args.solar_local_folder,
     )
     
     print(solar_profile_df.head())
@@ -332,16 +340,19 @@ def main():
         results = None
         hourly_df = None
 
+    # Sanitize site_id for use in filenames (replace / and other path-unsafe chars)
+    site_id_safe = str(args.site_id).replace("/", "_").replace("\\", "_").replace(" ", "_")
+
     # Save results
     if results is not None and hourly_df is not None:
-        summary_file = results_folder / f"summary_site{args.site_id}.csv"
+        summary_file = results_folder / f"summary_site{site_id_safe}.csv"
         pd.DataFrame([results]).to_csv(summary_file, index=False)
-        hourly_file = results_folder / f"hourly_site{args.site_id}.csv"
+        hourly_file = results_folder / f"hourly_site{site_id_safe}.csv"
         hourly_df.to_csv(hourly_file, index=False)
         print(f"✅ Scenario complete. Results saved to {results_folder}")
     else:
         # Save an error file indicating infeasibility
-        error_file = results_folder / f"INFEASIBLE_site{args.site_id}.txt"
+        error_file = results_folder / f"INFEASIBLE_site{site_id_safe}.txt"
         with open(error_file, 'w') as f:
             f.write(f"Site {args.site_id} - NO FEASIBLE SOLUTION FOUND\n")
             f.write(f"Optimization attempted down to load = 0 MW\n")

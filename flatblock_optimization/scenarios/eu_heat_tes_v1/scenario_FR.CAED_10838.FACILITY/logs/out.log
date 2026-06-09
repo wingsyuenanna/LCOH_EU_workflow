@@ -1,0 +1,36 @@
+Costs loaded for iso3_country=FRA, project_start=2025 (BNEF + battery components)
+            timestamp  P_kWperkWp  ...                             source_name  year
+0 2023-01-01 00:00:00         0.0  ...  SUCRERIES DISTILLERIES HAUTS DE FRANCE  2023
+1 2023-01-01 01:00:00         0.0  ...  SUCRERIES DISTILLERIES HAUTS DE FRANCE  2023
+2 2023-01-01 02:00:00         0.0  ...  SUCRERIES DISTILLERIES HAUTS DE FRANCE  2023
+3 2023-01-01 03:00:00         0.0  ...  SUCRERIES DISTILLERIES HAUTS DE FRANCE  2023
+4 2023-01-01 04:00:00         0.0  ...  SUCRERIES DISTILLERIES HAUTS DE FRANCE  2023
+
+[5 rows x 5 columns]
+✅ Data loaded
+Heat process temperature: 150.0 C (CLI override)
+Heat demand scaling: base_load=46.34 MW × multiplier=1.000 -> load_target=46.34 MW (disabled)
+Trying optimization with load = 46.3418 MW...
+
+======================================================================
+Building HEAT STORAGE (TES) model for site FR.CAED/10838.FACILITY
+Load target: 46.3418 MW | Availability: 90.0% | VoLL: $0/MWh | RTE: 0.970 | E->heat eff: 0.980 | Max duration: 12.0 h
+TES CAPEX: energy $100,000.00/MWh, power $0.00/MW (battery params: life=25y, discount=0.070, opex_frac=0.020); FOM $0.00/MW-yr
+TES cost model: battery_params | project_start=2025 | process_temp_c=150.0
+TES geometry: T_max=1500°C, T_min=150°C → usable stored-energy fraction≈0.900 (linear 0–T_max proxy); P_charge ≥ 4.00 × P_discharge; duration E ≤ 12.0 h × P_discharge; firm constant process load = 46.34 MW (intermittent charge via solar).
+======================================================================
+
+Variables built. Adding constraints...
+Constraints built. Solving...
+Solved in 6.94s
+
+======================================================================
+RESULTS (heat TES) - Site FR.CAED/10838.FACILITY
+  Solar: 609.18 MW | TES: P_charge=470.59 MW, P_discharge=117.65 MW, E=1411.77 MWh (≤12 h at discharge)
+  Reliability: 90.00% | Unserved: 40,595 MWh (972 hrs)
+  LCOE — Solar: $63.35 | TES: $36.80 | Total: $100.15/MWh
+======================================================================
+
+✅ Feasible optimization found at load 46.3418 MW
+✅ Scenario complete. Results saved to scenarios/eu_heat_tes_v1/scenario_FR.CAED_10838.FACILITY/results
+Tue Jun  9 12:55:09 EDT 2026

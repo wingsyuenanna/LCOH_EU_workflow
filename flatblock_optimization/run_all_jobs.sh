@@ -31,8 +31,8 @@ cd "$SCRIPT_DIR"
 # Define the base directory where your scenario folders live
 BASE_DIR="scenarios"
 
-# Set the scenario number to process
-SCENARIO_NUM=heat_battery_iron_steel  # <-- change this to the desired scenario number
+# Set the scenario number to process (can override with SCENARIO_NUM env var)
+SCENARIO_NUM=${SCENARIO_NUM:-eu_heat_tes_v1}
 
 # Max number of parallel jobs (can override with environment variable MAX_JOBS)
 MAX_JOBS=${MAX_JOBS:-24}

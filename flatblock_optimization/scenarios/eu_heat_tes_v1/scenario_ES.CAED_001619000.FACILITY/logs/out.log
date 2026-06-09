@@ -1,0 +1,36 @@
+Costs loaded for iso3_country=ESP, project_start=2025 (BNEF + battery components)
+            timestamp  ...  year
+0 2023-01-01 00:00:00  ...  2023
+1 2023-01-01 01:00:00  ...  2023
+2 2023-01-01 02:00:00  ...  2023
+3 2023-01-01 03:00:00  ...  2023
+4 2023-01-01 04:00:00  ...  2023
+
+[5 rows x 5 columns]
+✅ Data loaded
+Heat process temperature: 350.0 C (CLI override)
+Heat demand scaling: base_load=52.88 MW × multiplier=1.000 -> load_target=52.88 MW (disabled)
+Trying optimization with load = 52.8843 MW...
+
+======================================================================
+Building HEAT STORAGE (TES) model for site ES.CAED/001619000.FACILITY
+Load target: 52.8843 MW | Availability: 90.0% | VoLL: $0/MWh | RTE: 0.970 | E->heat eff: 0.950 | Max duration: 12.0 h
+TES CAPEX: energy $100,000.00/MWh, power $0.00/MW (battery params: life=25y, discount=0.070, opex_frac=0.020); FOM $0.00/MW-yr
+TES cost model: battery_params | project_start=2025 | process_temp_c=350.0
+TES geometry: T_max=1500°C, T_min=350°C → usable stored-energy fraction≈0.767 (linear 0–T_max proxy); P_charge ≥ 4.00 × P_discharge; duration E ≤ 12.0 h × P_discharge; firm constant process load = 52.88 MW (intermittent charge via solar).
+======================================================================
+
+Variables built. Adding constraints...
+Constraints built. Solving...
+Solved in 8.77s
+
+======================================================================
+RESULTS (heat TES) - Site ES.CAED/001619000.FACILITY
+  Solar: 236.67 MW | TES: P_charge=324.48 MW, P_discharge=81.12 MW, E=973.44 MWh (≤12 h at discharge)
+  Reliability: 90.00% | Unserved: 46,327 MWh (1141 hrs)
+  LCOE — Solar: $25.43 | TES: $22.23 | Total: $47.67/MWh
+======================================================================
+
+✅ Feasible optimization found at load 52.8843 MW
+✅ Scenario complete. Results saved to scenarios/eu_heat_tes_v1/scenario_ES.CAED_001619000.FACILITY/results
+Tue Jun  9 12:40:33 EDT 2026

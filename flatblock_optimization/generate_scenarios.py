@@ -153,13 +153,19 @@ def main():
         try:
             site_folder = str(int(site_id))
         except (TypeError, ValueError):
-            site_folder = str(site_id).strip()
+            # Replace filesystem-unsafe chars so site_folder is a plain directory name
+            site_folder = str(site_id).strip().replace("/", "_").replace("\\", "_").replace(" ", "_")
         iso3_country = row["iso3_country"]
         avail = row.get("availability", DEFAULT_AVAILABILITY)
         solar_start = int(row.get("solar_start_year", SOLAR_START_YEAR))
         solar_end = int(row.get("solar_end_year", SOLAR_END_YEAR))
         peak_cutoff = row.get("peak_demand_cutoff", PEAK_DEMAND_CUTOFF)
         project_start = int(row.get("project_start", args.project_start))
+        # Per-site load: use load_mw column if present, else fall back to CLI --base-load-mw
+        site_load_mw = float(row["load_mw"]) if "load_mw" in row.index and pd.notna(row.get("load_mw")) else args.base_load_mw
+        # Per-site process temperature for TES T_min: use process_temp_c column if present
+        site_process_temp = row.get("process_temp_c", None)
+        site_process_temp_arg = f"    --heat-process-temperature-c {float(site_process_temp):.1f} \\\n" if pd.notna(site_process_temp) else ""
 
         # Per-site folder name is scenario_<source_id>; scenario set (e.g. fix_solar_profile) is the parent dir.
         scenario_folder = scenarios_root / f"scenario_{site_folder}"
@@ -176,13 +182,18 @@ def main():
                 if args.use_temperature_demand_scaling
                 else ""
             )
+            # Include --heat-tmin-c only when no per-site process temperature is set;
+            # if per-site temp is present (site_process_temp_arg), let it govern T_min.
+            tmin_line = (
+                "" if site_process_temp_arg
+                else f"    --heat-tmin-c {args.heat_tmin_c} \\\n"
+            )
             heat_lines = f"""    --storage-type heat \\
     --heat-rte {args.heat_rte} \\
     --heat-max-hours {args.heat_max_hours} \\
     --heat-tmax-c {args.heat_tmax_c} \\
-    --heat-tmin-c {args.heat_tmin_c} \\
     --heat-cd-ratio {args.heat_cd_ratio} \\
-{temp_scale_line}    --base-load-mw {args.base_load_mw} \\
+{tmin_line}{site_process_temp_arg}{temp_scale_line}    --base-load-mw {site_load_mw} \\
 """
         with open(jobscript_path, "w") as f:
             f.write(f"""#!/bin/bash
