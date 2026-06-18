@@ -1,5 +1,5 @@
 # LCOH EU Workflow — Assumptions Log
-**Generated:** 2026-06-08T18:20:26Z
+**Generated:** 2026-06-17T20:48:15Z
 **Spec:** v1.4.0
 
 ---
@@ -144,19 +144,10 @@
 - **Rationale:** Off-grid solar + BESS LCOH benchmarks vary substantially across EU regions and system sizes. Published off-grid benchmarks span a wider range than grid electricity benchmarks. Widened from 15% (grid run) to 50% per spec v1.4.0 §7.
 - **Applied:** LCOH values deviating by >50% from the literature range midpoint are flagged but not automatically invalidated
 
-### A16 — Heat Share of Reported Fuel Use
-- **Value:** 0.85 (default when activity/sector mapping not applied)
-- **Source:** Conservative default; see IEA industrial energy balance methodology
-- **Status:** CONFIRMED (conservative)
-
 ### A17 — Gas GCV to LHV Conversion
 - **Value:** 1.1098 (multiply GCV-basis price by 1.1098 to get LHV-basis price)
 - **Rationale:** Natural gas HHV/LHV ≈ 1.1098 (Eurogas; IPCC 2006 GL Table 1.2)
 - **Status:** CONFIRMED
-
-### A18 — Treatment of Non-Gas Fuels
-- **Value:** Exclude unless mapped
-- **Applied:** Only natural gas and substitutable thermal TJ used for heat demand derivation; other fuels flagged but not included in electrification analysis
 
 ### A19 — Max HP Useful Heat Temperature
 - **Value:** 120°C

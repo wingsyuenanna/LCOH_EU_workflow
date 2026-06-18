@@ -1,9 +1,9 @@
 # LCOH EU Workflow — Method Summary (off-grid electricity)
-**Generated:** 2026-06-08T18:20:26Z
+**Generated:** 2026-06-17T20:48:15Z
 **Spec:** v1.4.0 | **Variant:** off_grid_electricity_run
 **Facilities in input:** 3591
-**Facilities with heat demand:** 1759
-**Facilities with gas LCOH computed:** 1759
+**Facilities with heat demand:** 101
+**Facilities with gas LCOH computed:** 101
 
 ## Formula
 
@@ -40,48 +40,48 @@ Priority: (1) reported process_heat_temp_C → (2) eprtr_activity A21 mapping �
 
 | Band | Count | HP eligible | HB eligible |
 |------|-------|-------------|-------------|
-| low  | 47 | Yes | Yes |
-| mid  | 1369 | No  | Yes |
-| high | 343 | No  | Yes (if ≤1500°C) |
+| low  | 11 | Yes | Yes |
+| mid  | 47 | No  | Yes |
+| high | 43 | No  | Yes (if ≤1500°C) |
 
 ## Summary Results
 
 | Metric | Value |
 |--------|-------|
-| Facilities with gas LCOH | 1759 |
-| Facilities with HP LCOH | 47 |
-| Facilities with HB LCOH | 1759 |
-| Avg LCOH natural gas (EUR/MWh_th) | 80.7 |
-| Avg LCOH heat pump (EUR/MWh_th) | 70.8 |
-| Avg LCOH heat battery (EUR/MWh_th) | 45.2 |
-| Least-cost: natural gas | 311 facilities |
+| Facilities with gas LCOH | 101 |
+| Facilities with HP LCOH | 11 |
+| Facilities with HB LCOH | 101 |
+| Avg LCOH natural gas (EUR/MWh_th) | 93.2 |
+| Avg LCOH heat pump (EUR/MWh_th) | 70.6 |
+| Avg LCOH heat battery (EUR/MWh_th) | 43.1 |
+| Least-cost: natural gas | 0 facilities |
 | Least-cost: heat pump   | 0 facilities |
-| Least-cost: heat battery | 1448 facilities |
+| Least-cost: heat battery | 101 facilities |
 
 ## BNEF Data Coverage
 
 | Type | Count |
 |------|-------|
-| Direct BNEF country data (`bnef_data_source = bnef`) | 933 facilities |
-| Proxied BNEF data (`bnef_data_source = proxied`) | 826 facilities |
+| Direct BNEF country data (`bnef_data_source = bnef`) | 77 facilities |
+| Proxied BNEF data (`bnef_data_source = proxied`) | 24 facilities |
 
 ## Confidence Distribution (Spec §6.8)
 
 | Rating | Count |
 |--------|-------|
 | HIGH | 0 |
-| MEDIUM | 1203 |
-| LOW | 556 |
-| NOT_COMPUTED | 1832 |
+| MEDIUM | 71 |
+| LOW | 30 |
+| NOT_COMPUTED | 3490 |
 
 ## Literature Plausibility Check (Spec §9.2.1, tolerance A15=50%)
 
 | Check | Range | Out-of-range count |
 |-------|-------|--------------------|
-| Natural gas LCOH | 30–100 EUR/MWh_th (flag <20 or >130) | 103 |
+| Natural gas LCOH | 30–100 EUR/MWh_th (flag <20 or >130) | 0 |
 | Heat pump LCOH | 60–180 EUR/MWh_th (flag <40 or >250) | 0 |
-| Heat battery LCOH | 60–200 EUR/MWh_th (flag <40 or >280) | 268 |
-| Off-grid electricity LCOE | 40–130 USD/MWh (flag <35 or >160 USD/MWh) | 136 |
+| Heat battery LCOH | 60–200 EUR/MWh_th (flag <40 or >280) | 30 |
+| Off-grid electricity LCOE | 40–130 USD/MWh (flag <35 or >160 USD/MWh) | 0 |
 
 ## Key Assumptions
 

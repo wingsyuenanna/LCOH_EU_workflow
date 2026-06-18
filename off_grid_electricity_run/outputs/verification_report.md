@@ -1,5 +1,5 @@
 # LCOH EU Workflow — Verification Report (off-grid electricity)
-**Generated:** 2026-06-08T18:20:26Z
+**Generated:** 2026-06-17T20:48:15Z
 **Spec:** v1.4.0
 
 ## Data & Units ✓
@@ -36,10 +36,10 @@
 |-------|-------|
 | Facilities with gas LCOH but no gas price | 0 |
 | Facilities with elec-eligible but no elec price | 0 |
-| BNEF year proxied (analysis_year ≠ BNEF year) | 1759 |
-| Fallback to EU27 gas average | 7 |
-| Direct BNEF country data | 933 |
-| Proxied BNEF country data | 826 |
+| BNEF year proxied (analysis_year ≠ BNEF year) | 101 |
+| Fallback to EU27 gas average | 0 |
+| Direct BNEF country data | 77 |
+| Proxied BNEF country data | 24 |
 
 ## Literature Plausibility Check (Spec §9.2.1, A15=50%)
 
@@ -47,10 +47,10 @@ Benchmark ranges (EU industrial, off-grid PV+BESS scenario):
 
 | Pathway | Expected range | Flag threshold | Out-of-range |
 |---------|---------------|---------------|-------------|
-| Natural gas LCOH | 30–100 EUR/MWh_th | <20 or >130 | 103 facilities |
+| Natural gas LCOH | 30–100 EUR/MWh_th | <20 or >130 | 0 facilities |
 | Heat pump LCOH | 60–180 EUR/MWh_th | <40 or >250 | 0 facilities |
-| Heat battery LCOH | 60–200 EUR/MWh_th | <40 or >280 | 268 facilities |
-| Off-grid elec LCOE | 40–130 USD/MWh | <35 or >160 USD/MWh | 136 facilities |
+| Heat battery LCOH | 60–200 EUR/MWh_th | <40 or >280 | 30 facilities |
+| Off-grid elec LCOE | 40–130 USD/MWh | <35 or >160 USD/MWh | 0 facilities |
 
 Source basis: BNEF NEO 2025 country-level PV/BESS costs; IEA/JRC industrial heat LCOH ranges; EU ETS carbon pricing.
 Tolerance A15=50% applied (widened vs grid run 15%) due to variability in off-grid solar benchmarks across EU regions.
@@ -59,13 +59,13 @@ Tolerance A15=50% applied (widened vs grid run 15%) due to variability in off-gr
 | Rating | Count | Criteria |
 |--------|-------|---------|
 | HIGH | 0 | Direct BNEF + TEMP_FROM_DATA + substitutable thermal + no fallback/proxied flags |
-| MEDIUM | 1203 | Proxied BNEF or activity-inferred temp, but no extreme data quality issues |
-| LOW | 556 | Price fallback, default temp band, total-fuel heat demand, or out-of-range LCOH |
-| NOT_COMPUTED | 1832 | No heat demand or all pathways excluded |
+| MEDIUM | 71 | Proxied BNEF or activity-inferred temp, but no extreme data quality issues |
+| LOW | 30 | Price fallback, default temp band, total-fuel heat demand, or out-of-range LCOH |
+| NOT_COMPUTED | 3490 | No heat demand or all pathways excluded |
 
 ## Cross-run Comparison (Spec §9.2.3)
 Grid run outputs: found.
-Cross-run flagged facilities: 860 (see cross_run_comparison.csv).
+Cross-run flagged facilities: 19 (see cross_run_comparison.csv).
 Most common flag: OFFGRID_CHEAPER_THAN_GRID_UNEXPECTED — expected because off-grid PV-only electricity for heat battery (avg ~44 EUR/MWh) is well below grid industrial electricity tariffs in Northern/Central EU.
 
 ## Outstanding Flags / Unresolved Issues

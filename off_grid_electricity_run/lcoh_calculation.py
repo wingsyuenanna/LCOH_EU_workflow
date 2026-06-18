@@ -23,9 +23,9 @@ from collections import defaultdict
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT  = os.path.dirname(BASE_DIR)  # LCOH_EU_workflow/ (shared inputs live here)
 INPUTS_DIR   = os.path.join(REPO_ROOT, "inputs")
-INPUT_CSV    = os.path.join(INPUTS_DIR, "eprtr_lcp_matched.csv")
-BNEF_CSV     = os.path.join(INPUTS_DIR, "bnef_country_costs.csv")
-EPSILON_CSV  = os.path.join(INPUTS_DIR, "eprtr_epsilon_reference.csv")
+INPUT_CSV         = os.path.join(INPUTS_DIR, "eprtr_lcp_matched.csv")
+BNEF_CSV          = os.path.join(INPUTS_DIR, "bnef_country_costs.csv")
+HEAT_DEMAND_CSV   = os.path.join(INPUTS_DIR, "estimate_heat_demand", "heat_demand_by_facility.csv")
 OUT_DIR    = os.path.join(BASE_DIR, "outputs")
 CACHE_DIR  = os.path.join(OUT_DIR, "cached_data")
 GAS_CSV    = os.path.join(CACHE_DIR, "eurostat_gas_prices_all_years.csv")
@@ -66,9 +66,7 @@ ASSUMPTIONS = {
     "A13": {"id": "A13", "name": "ECB EUR/USD rate (2024 avg)",      "value": 0.921,  "unit": "EUR/USD"},
     "A14": {"id": "A14", "name": "Data staleness threshold",         "value": 24,     "unit": "months"},
     "A15": {"id": "A15", "name": "Verification tolerance (off-grid, wider band)", "value": 0.50, "unit": "fraction"},
-    "A16": {"id": "A16", "name": "Heat share of total fuel (default)","value": 0.85,  "unit": "fraction"},
     "A17": {"id": "A17", "name": "GCV/LHV ratio for natural gas",    "value": 1.1098, "unit": "ratio"},
-    "A18": {"id": "A18", "name": "Non-gas fuel treatment",           "value": "exclude_unless_mapped", "unit": "rule"},
     "A19": {"id": "A19", "name": "Max HP useful heat temp",          "value": 120.0,  "unit": "°C"},
     "A20": {"id": "A20", "name": "Max HB discharge temp (Rondo)",    "value": 1500.0, "unit": "°C"},
     "A_CF":{"id": "A_CF","name": "Industrial process heat capacity factor","value": 0.85, "unit": "fraction"},
@@ -359,8 +357,8 @@ def compute_confidence(
         low_reasons.append("PRICE_FALLBACK_OR_MISSING")
     if temp_provenance == "TEMP_DEFAULT_MID_BAND":
         low_reasons.append("TEMP_DEFAULT")
-    if heat_demand_provenance == "HEAT_DEMAND_INFERRED_FROM_TOTAL_FUEL":
-        low_reasons.append("HEAT_DEMAND_TOTAL_FUEL")
+    if heat_demand_provenance == "NO_HEAT_DATA":
+        low_reasons.append("HEAT_DEMAND_MISSING")
     if any(x in flags_str for x in ("_OUT_OF_RANGE]",)):
         low_reasons.append("LCOH_OUT_OF_RANGE")
     if low_reasons:
@@ -370,129 +368,34 @@ def compute_confidence(
     high = (
         bnef_data_source == "bnef"
         and temp_provenance == "TEMP_FROM_DATA"
-        and heat_demand_provenance == "HEAT_DEMAND_FROM_SUBSTITUTABLE_THERMAL"
+        and heat_demand_provenance == "HEAT_DEMAND_FROM_ESTIMATE_FILE"
         and "[PRICE_YEAR_PROXIED_" not in flags_str
     )
     return "HIGH" if high else "MEDIUM"
 
 
-# ── E5. Epsilon (Fuel-to-Heat Conversion) ─────────────────────────────────────
-
-def _expand_epsilon_code(raw_code):
-    """Expand compound codes like '2(e)/(f)' to a list of matchable activity codes."""
-    code = raw_code.split(" - ")[0].strip()
-    if "/" not in code:
-        return [code]
-
-    results = []
-    parts = code.split("/")
-    first = parts[0].strip()
-    results.append(first)
-
-    parent_match = re.match(r'^(\d+)', first)
-    parent_num = parent_match.group(1) if parent_match else ""
-
-    for part in parts[1:]:
-        part = part.strip()
-        if not part.startswith("("):
-            continue
-        range_match = re.match(r'\((\w+)\)\((\w+)-(\w+)\)', part)
-        if range_match:
-            main_sub, range_start, range_end = range_match.group(1), range_match.group(2), range_match.group(3)
-            roman_nums = ["i", "ii", "iii", "iv", "v", "vi"]
-            try:
-                s_idx, e_idx = roman_nums.index(range_start), roman_nums.index(range_end)
-            except ValueError:
-                continue
-            base = f"{parent_num}({main_sub})"
-            if base not in results:
-                results.append(base)
-            for r in roman_nums[s_idx:e_idx + 1]:
-                results.append(f"{base}({r})")
-        elif "(" in part:
-            results.append(f"{parent_num}{part}")
-        else:
-            sub_match = re.match(r'\((\w+)\)', part)
-            if sub_match:
-                results.append(f"{parent_num}({sub_match.group(1)})")
-
-    return list(dict.fromkeys(results))
-
-
-def load_epsilon_table(epsilon_csv):
-    """Load activity→epsilon_recommended from eprtr_epsilon_reference.csv."""
-    epsilon_map = {}
-    with open(epsilon_csv, newline="", encoding="latin-1") as f:
-        for row in csv.DictReader(f):
-            raw_code = row.get("eprtr_activity", "").strip()
-            eps_str  = row.get("epsilon_recommended", "").strip()
-            if not raw_code or not eps_str:
-                continue
-            try:
-                eps_val = float(eps_str)
-            except ValueError:
-                continue
-            for code in _expand_epsilon_code(raw_code):
-                if code not in epsilon_map:  # first row wins (general before H2-specific)
-                    epsilon_map[code] = eps_val
-    return epsilon_map
-
-
-def get_activity_epsilon(activity, epsilon_map):
-    """
-    Return (epsilon, provenance) for activity.
-    Falls back via parent-code trimming then to A5 default.
-    """
-    if not activity:
-        return ASSUMPTIONS["A5"]["value"], "EPSILON_DEFAULT_A5"
-    act = activity.strip()
-    if act in epsilon_map:
-        return epsilon_map[act], "EPSILON_FROM_TABLE"
-    # Progressively strip trailing sub-codes: "4(a)(i)" → "4(a)" → "4"
-    candidate = act
-    while True:
-        new_candidate = re.sub(r'\([^()]+\)$', '', candidate)
-        if new_candidate == candidate:
-            break
-        candidate = new_candidate
-        if candidate in epsilon_map:
-            return epsilon_map[candidate], "EPSILON_FROM_TABLE_PREFIX"
-    return ASSUMPTIONS["A5"]["value"], "EPSILON_DEFAULT_A5"
-
-
-# ── F. Heat Demand Derivation ─────────────────────────────────────────────────
+# ── F. Heat Demand Loading ────────────────────────────────────────────────────
 TJ_TO_MWH = 277.7777778
 
-def derive_heat_demand(row, epsilon=None):
+def load_heat_demand_table(heat_demand_csv):
     """
-    Returns (annual_heat_demand_MWh_th, provenance, flags).
-    Section 6.6 priority: substitutable_thermal > NaturalGas_TJ > lcp_total_TJ.
-    epsilon (fuel-to-heat conversion) is applied to all three fuel-input paths.
+    Load eprtr_facility_id → heat_demand_TJ from estimate_heat_demand/heat_demand_by_facility.csv.
+    heat_demand_TJ is already eta-adjusted (fuel input × tech-split factor); no further
+    epsilon conversion needed here.
     """
-    def safe_float(v):
-        try:
-            return float(v) if v and str(v).strip() else 0.0
-        except (ValueError, TypeError):
-            return 0.0
-
-    sub_tj    = safe_float(row.get("lcp_substitutable_thermal_TJ"))
-    gas_tj    = safe_float(row.get("lcp_NaturalGas_TJ"))
-    total_tj  = safe_float(row.get("lcp_total_TJ"))
-    if epsilon is None:
-        epsilon = ASSUMPTIONS["A5"]["value"]
-    hs        = ASSUMPTIONS["A16"]["value"]
-
-    if sub_tj > 0:
-        return sub_tj * TJ_TO_MWH * epsilon, "HEAT_DEMAND_FROM_SUBSTITUTABLE_THERMAL", []
-
-    if gas_tj > 0:
-        return gas_tj * TJ_TO_MWH * epsilon, "HEAT_DEMAND_INFERRED_FROM_GAS_FUEL", []
-
-    if total_tj > 0:
-        flags = ["HEAT_SHARE_DEFAULT_USED"]
-        return total_tj * TJ_TO_MWH * hs * epsilon, "HEAT_DEMAND_INFERRED_FROM_TOTAL_FUEL", flags
-
-    return None, "NO_HEAT_DATA", ["HEAT_DEMAND_MISSING"]
+    table = {}
+    with open(heat_demand_csv, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            fid = row.get("eprtr_facility_id", "").strip()
+            if not fid:
+                continue
+            hd_tj = _float_or_none(row.get("heat_demand_TJ"))
+            table[fid] = {
+                "heat_demand_TJ": hd_tj,
+                "routing_mode": row.get("routing_mode", ""),
+                "activity_label": row.get("activity_label", ""),
+            }
+    return table
 
 # ── G. Current Fuel Derivation ────────────────────────────────────────────────
 def derive_current_fuel(row):
@@ -610,8 +513,8 @@ def main():
 
     pv_only_prices, hp_elec_prices, hb_capex_by_iso, pv_data_source = load_bnef_costs(BNEF_CSV)
     gas_prices = load_gas_prices(GAS_CSV)
-    epsilon_table = load_epsilon_table(EPSILON_CSV)
-    log_progress(f"PHASE_1_EPSILON: Loaded {len(epsilon_table)} activity→epsilon mappings")
+    heat_demand_table = load_heat_demand_table(HEAT_DEMAND_CSV)
+    log_progress(f"PHASE_1_HEAT_DEMAND: Loaded {len(heat_demand_table)} facility heat demand records")
     log_progress(
         f"PHASE_1_DONE: BNEF PV-only {len(pv_only_prices)} country-years, "
         f"HP (PV+BESS) {len(hp_elec_prices)} country-years, "
@@ -651,11 +554,72 @@ def main():
         iso3     = COUNTRY_TO_ISO3.get(country, "???")
         geo_code = COUNTRY_TO_EUROSTAT.get(country, "???")
 
-        # Epsilon lookup (fuel-to-heat conversion, sector-specific)
-        epsilon_val, epsilon_prov = get_activity_epsilon(activity, epsilon_table)
+        # Restrict to id_direct matches with 2024 CO2 data only
+        match_method = fac.get("match_method", "").strip()
+        if match_method != "id_direct" or str(co2_year).strip() != "2024":
+            skipped += 1
+            results.append({
+                "eprtr_facility_id": fid, "eprtr_facility_name": fname,
+                "eprtr_country": country, "iso3_country": iso3,
+                "analysis_year": analysis_year, "eprtr_activity": activity,
+                "eprtr_lat": lat, "eprtr_lon": lon,
+                "process_heat_temp_band": None, "process_heat_temp_C": None,
+                "temp_provenance": None, "pathways_evaluated": None,
+                "pathways_excluded": "ALL|OUT_OF_SCOPE",
+                "annual_heat_demand_MWh_th": None,
+                "annual_heat_demand_provenance": "SKIPPED_NOT_IN_SCOPE",
+                "natural_gas_fuel_energy_MWh": None,
+                "lcp_total_TJ": fac.get("lcp_total_TJ"),
+                "lcoh_heat_pump_EUR_MWhth": None, "lcoh_heat_battery_EUR_MWhth": None,
+                "lcoh_natural_gas_EUR_MWhth": None, "least_cost_pathway": None,
+                "delta_vs_gas_hp_EUR_MWhth": None, "delta_vs_gas_hb_EUR_MWhth": None,
+                "elec_price_hp_EUR_MWh": None, "elec_price_hb_EUR_MWh": None,
+                "bnef_data_source": None, "bnef_year_used": None,
+                "gas_price_used_EUR_MWh": None,
+                "lcoh_confidence": "NOT_COMPUTED", "assumptions_used": None,
+                "verification_status": "SKIPPED_NOT_IN_SCOPE",
+                "flags": "NOT_ID_DIRECT_OR_NOT_2024",
+            })
+            continue
 
-        # Derive heat demand
-        heat_demand_MWh, heat_prov, heat_flags = derive_heat_demand(fac, epsilon=epsilon_val)
+        # Skip thermal power stations — fuel reported is electricity generation, not process heat
+        if activity.strip() == "1(c)":
+            skipped += 1
+            results.append({
+                "eprtr_facility_id": fid, "eprtr_facility_name": fname,
+                "eprtr_country": country, "iso3_country": iso3,
+                "analysis_year": analysis_year, "eprtr_activity": activity,
+                "eprtr_lat": lat, "eprtr_lon": lon,
+                "process_heat_temp_band": None, "process_heat_temp_C": None,
+                "temp_provenance": None, "pathways_evaluated": None,
+                "pathways_excluded": "ALL|POWER_PLANT_EXCLUDED",
+                "annual_heat_demand_MWh_th": None,
+                "annual_heat_demand_provenance": "SKIPPED_POWER_PLANT",
+                "natural_gas_fuel_energy_MWh": None,
+                "lcp_total_TJ": fac.get("lcp_total_TJ"),
+                "lcoh_heat_pump_EUR_MWhth": None, "lcoh_heat_battery_EUR_MWhth": None,
+                "lcoh_natural_gas_EUR_MWhth": None, "least_cost_pathway": None,
+                "delta_vs_gas_hp_EUR_MWhth": None, "delta_vs_gas_hb_EUR_MWhth": None,
+                "elec_price_hp_EUR_MWh": None, "elec_price_hb_EUR_MWh": None,
+                "bnef_data_source": None, "bnef_year_used": None,
+                "gas_price_used_EUR_MWh": None,
+                "lcoh_confidence": "NOT_COMPUTED",
+                "assumptions_used": None,
+                "verification_status": "SKIPPED_POWER_PLANT",
+                "flags": "ACTIVITY_1C_EXCLUDED",
+            })
+            continue
+
+        # Heat demand from estimate_heat_demand/heat_demand_by_facility.csv
+        hd_row = heat_demand_table.get(fid, {})
+        hd_tj = hd_row.get("heat_demand_TJ")
+        if hd_tj is not None and hd_tj > 0:
+            heat_demand_MWh = hd_tj * TJ_TO_MWH
+            heat_prov = "HEAT_DEMAND_FROM_ESTIMATE_FILE"
+        else:
+            heat_demand_MWh = None
+            heat_prov = "NO_HEAT_DATA"
+        heat_flags = []
 
         if heat_demand_MWh is None or heat_demand_MWh <= 0:
             no_heat_data += 1
@@ -676,7 +640,6 @@ def main():
                 "annual_heat_demand_provenance": heat_prov,
                 "natural_gas_fuel_energy_MWh": None,
                 "lcp_total_TJ": fac.get("lcp_total_TJ"),
-                "lcp_substitutable_thermal_TJ": fac.get("lcp_substitutable_thermal_TJ"),
                 "lcoh_heat_pump_EUR_MWhth": None,
                 "lcoh_heat_battery_EUR_MWhth": None,
                 "lcoh_natural_gas_EUR_MWhth": None,
@@ -688,12 +651,10 @@ def main():
                 "bnef_data_source": None,
                 "bnef_year_used": None,
                 "gas_price_used_EUR_MWh": None,
-                "epsilon_used": epsilon_val,
-                "epsilon_provenance": epsilon_prov,
                 "lcoh_confidence": "NOT_COMPUTED",
-                "assumptions_used": "A1,A2,A5,A_EPSILON",
+                "assumptions_used": None,
                 "verification_status": "SKIPPED_NO_HEAT",
-                "flags": "|".join(heat_flags + ["NO_HEAT_DATA"]),
+                "flags": "NO_HEAT_DATA",
             })
             continue
 
@@ -819,7 +780,7 @@ def main():
             lcoh_gas, lcoh_hp, lcoh_hb,
         )
 
-        assumptions_used = "A1,A2,A3,A4,A5,A6,A7,A8,A9_hp,A9_hb,A9_gas,A10,A13,A15,A16,A17,BNEF_OFFGRID,A_EPSILON"
+        assumptions_used = "A1,A2,A3,A4,A5,A6,A7,A8,A9_hp,A9_hb,A9_gas,A10,A13,A15,A17,BNEF_OFFGRID"
 
         verification_status = "COMPUTED"
         if "[PRICE_NOT_AVAILABLE]" in all_flags:
@@ -845,7 +806,6 @@ def main():
             "annual_heat_demand_provenance": heat_prov,
             "natural_gas_fuel_energy_MWh":  round(nat_gas_fuel_MWh, 2) if nat_gas_fuel_MWh else None,
             "lcp_total_TJ":                  fac.get("lcp_total_TJ"),
-            "lcp_substitutable_thermal_TJ":  fac.get("lcp_substitutable_thermal_TJ"),
             "lcoh_heat_pump_EUR_MWhth":       lcoh_hp,
             "lcoh_heat_battery_EUR_MWhth":    lcoh_hb,
             "lcoh_natural_gas_EUR_MWhth":     lcoh_gas,
@@ -857,8 +817,6 @@ def main():
             "bnef_data_source":              bnef_data_src,
             "bnef_year_used":                elec_yr_used,
             "gas_price_used_EUR_MWh":         round(gas_EUR_MWh,  3) if gas_EUR_MWh  else None,
-            "epsilon_used":                  epsilon_val,
-            "epsilon_provenance":            epsilon_prov,
             "lcoh_confidence":               lcoh_confidence,
             "assumptions_used":              assumptions_used,
             "verification_status":           verification_status,
@@ -918,13 +876,12 @@ def main():
         "process_heat_temp_band", "process_heat_temp_C", "temp_provenance",
         "pathways_evaluated", "pathways_excluded",
         "annual_heat_demand_MWh_th", "annual_heat_demand_provenance",
-        "natural_gas_fuel_energy_MWh", "lcp_total_TJ", "lcp_substitutable_thermal_TJ",
+        "natural_gas_fuel_energy_MWh", "lcp_total_TJ",
         "lcoh_heat_pump_EUR_MWhth", "lcoh_heat_battery_EUR_MWhth",
         "lcoh_natural_gas_EUR_MWhth", "least_cost_pathway",
         "delta_vs_gas_hp_EUR_MWhth", "delta_vs_gas_hb_EUR_MWhth",
         "elec_price_hp_EUR_MWh", "elec_price_hb_EUR_MWh",
         "bnef_data_source", "bnef_year_used", "gas_price_used_EUR_MWh",
-        "epsilon_used", "epsilon_provenance",
         "lcoh_confidence", "assumptions_used", "verification_status", "flags",
     ]
     with open(results_file, "w", newline="", encoding="utf-8") as f:
@@ -1352,19 +1309,10 @@ Most common flag: OFFGRID_CHEAPER_THAN_GRID_UNEXPECTED — expected because off-
 - **Rationale:** Off-grid solar + BESS LCOH benchmarks vary substantially across EU regions and system sizes. Published off-grid benchmarks span a wider range than grid electricity benchmarks. Widened from 15% (grid run) to 50% per spec v1.4.0 §7.
 - **Applied:** LCOH values deviating by >50% from the literature range midpoint are flagged but not automatically invalidated
 
-### A16 — Heat Share of Reported Fuel Use
-- **Value:** 0.85 (default when activity/sector mapping not applied)
-- **Source:** Conservative default; see IEA industrial energy balance methodology
-- **Status:** CONFIRMED (conservative)
-
 ### A17 — Gas GCV to LHV Conversion
 - **Value:** 1.1098 (multiply GCV-basis price by 1.1098 to get LHV-basis price)
 - **Rationale:** Natural gas HHV/LHV ≈ 1.1098 (Eurogas; IPCC 2006 GL Table 1.2)
 - **Status:** CONFIRMED
-
-### A18 — Treatment of Non-Gas Fuels
-- **Value:** Exclude unless mapped
-- **Applied:** Only natural gas and substitutable thermal TJ used for heat demand derivation; other fuels flagged but not included in electrification analysis
 
 ### A19 — Max HP Useful Heat Temperature
 - **Value:** 120°C

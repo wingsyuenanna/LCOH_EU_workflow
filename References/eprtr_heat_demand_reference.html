@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-PRTR Activities: Heat Demand Reference Table</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171b26;
+    --surface2: #1e2330;
+    --border: #2a3045;
+    --accent: #4f8ef7;
+    --accent2: #f7a24f;
+    --accent3: #4ff7a2;
+    --accent4: #f74f6b;
+    --text: #d8dde8;
+    --text-dim: #7a8299;
+    --text-bright: #eef0f6;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 32px 24px;
+  }
+  header { margin-bottom: 20px; border-left: 3px solid var(--accent); padding-left: 16px; }
+  header h1 { font-size: 20px; font-weight: 600; color: var(--text-bright); letter-spacing: 0.02em; margin-bottom: 4px; }
+  header p { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+
+  .scope-box {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 16px; padding: 12px 16px;
+    background: rgba(79,247,162,0.05);
+    border: 1px solid rgba(79,247,162,0.25);
+    border-radius: 4px; font-size: 11px;
+  }
+  .scope-box .scope-title { color: var(--accent3); font-family: var(--mono); font-weight: 600; margin-bottom: 4px; }
+  .scope-box p { color: var(--text-dim); }
+  .scope-box strong { color: var(--text); }
+
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 16px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 11px; color: var(--text-dim); font-family: var(--mono);
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-boiler { background: var(--accent); }
+  .dot-direct { background: var(--accent2); }
+  .dot-chp   { background: var(--accent3); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; min-width: 1120px; }
+  thead tr { background: var(--surface2); border-bottom: 2px solid var(--accent); }
+  th {
+    padding: 10px 12px; text-align: left;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+    white-space: nowrap;
+  }
+  th.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.act-row td { padding: 11px 12px; vertical-align: top; }
+  tbody tr.sub-row td { padding: 8px 12px 10px; vertical-align: top; background: #131620; }
+  tbody tr.divider td { border-top: 2px solid var(--border); padding: 0; height: 0; }
+
+  td.act-num { font-family: var(--mono); font-weight: 600; color: var(--text-bright); white-space: nowrap; font-size: 13px; }
+  td.act-num.sub { color: var(--text-dim); font-size: 11px; padding-left: 20px !important; }
+  td.act-name { font-weight: 500; color: var(--text-bright); font-size: 12px; min-width: 155px; }
+  td.act-name.sub { font-weight: 400; color: var(--text-dim); font-size: 11px; }
+  td.act-sub { font-size: 11px; color: var(--text-dim); font-family: var(--mono); min-width: 120px; }
+  td.units-cell { min-width: 195px; font-size: 12px; }
+  .unit-tag {
+    display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 2px 6px; margin: 1px 2px 1px 0;
+    font-size: 10px; font-family: var(--mono); color: var(--text-dim);
+  }
+  td.split-cell { min-width: 175px; }
+  .split-bar { display: flex; height: 13px; border-radius: 2px; overflow: hidden; margin-bottom: 5px; border: 1px solid var(--border); }
+  .split-seg { height: 100%; }
+  .seg-boiler { background: var(--accent); opacity: 0.8; }
+  .seg-direct { background: var(--accent2); opacity: 0.8; }
+  .seg-chp    { background: var(--accent3); opacity: 0.8; }
+  .split-labels { display: flex; flex-wrap: wrap; gap: 4px; font-size: 10px; font-family: var(--mono); }
+  .split-label { color: var(--text-dim); }
+  .split-label .val { color: var(--text-bright); font-weight: 600; }
+
+  td.eps-cell { text-align: center; min-width: 90px; }
+  .eps-badge {
+    display: inline-block; font-family: var(--mono); font-size: 15px; font-weight: 600;
+    color: var(--accent3); background: rgba(79,247,162,0.08);
+    border: 1px solid rgba(79,247,162,0.25); border-radius: 4px;
+    padding: 3px 10px; margin-bottom: 3px;
+  }
+  .eps-badge.moderate { color: var(--accent2); background: rgba(247,162,79,0.08); border-color: rgba(247,162,79,0.25); }
+  .eps-badge.low { color: #aaa; background: rgba(170,170,170,0.06); border-color: rgba(170,170,170,0.2); }
+  .eps-range { font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
+
+  td.eta-cell { text-align: center; min-width: 72px; }
+  .eta-val { font-family: var(--mono); font-weight: 600; font-size: 14px; }
+  .eta-one { color: var(--accent3); }
+  .eta-part { color: var(--accent2); }
+  .eta-low  { color: var(--accent4); }
+  .eta-sub { font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
+
+  td.notes-cell { font-size: 11px; color: var(--text-dim); min-width: 210px; max-width: 270px; }
+  .warn { color: var(--accent4); font-weight: 600; }
+  .src  { color: var(--accent); font-size: 10px; font-family: var(--mono); }
+
+  .fuel-pill {
+    display: inline-block; font-size: 10px; font-family: var(--mono);
+    padding: 1px 5px; border-radius: 2px; margin: 1px 1px 1px 0; border: 1px solid;
+  }
+  .fuel-gas     { border-color:#4f8ef7; color:#4f8ef7; background:rgba(79,142,247,0.08); }
+  .fuel-coal    { border-color:#999;    color:#999;    background:rgba(153,153,153,0.08); }
+  .fuel-biomass { border-color:#4ff7a2; color:#4ff7a2; background:rgba(79,247,162,0.08); }
+  .fuel-other   { border-color:#f7a24f; color:#f7a24f; background:rgba(247,162,79,0.08); }
+  .fuel-lignite { border-color:#c97;    color:#c97;    background:rgba(204,153,119,0.08); }
+  .fuel-liquid  { border-color:#a78;    color:#a78;    background:rgba(170,119,136,0.08); }
+
+  .footer-box {
+    margin-top: 20px; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 10px; color: var(--text-dim);
+    font-family: var(--mono); line-height: 1.8;
+  }
+  .footer-box strong { color: var(--text); }
+  .footer-box .col2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>E-PRTR Heat Demand Reference Table</h1>
+  <p>Unit types · End-use splits · ε (process efficiency) · η (heat fraction of fuel) &nbsp;|&nbsp; Scope: manufacturing & industrial process heat only</p>
+</header>
+
+<div class="scope-box">
+  <div>
+    <div class="scope-title">SCOPE</div>
+    <p><strong>Activity 1(c) excluded</strong> — power stations use fuel for electricity generation, not process heat.<br>
+    All remaining activities burn fuel <strong>primarily to produce heat</strong>, so <strong>η = 1.0 is the default</strong>.<br>
+    Exceptions are only where <strong>process chemistry</strong> (not combustion) produces CO₂: cement calcination, lime calcination, iron reduction, H₂ reforming.</p>
+  </div>
+  <div>
+    <div class="scope-title">KEY DEFINITIONS</div>
+    <p><strong>η (eta)</strong> = fraction of total reported CO₂ attributable to combustion for heat (vs. process chemistry).<br>
+    <strong>ε (epsilon)</strong> = useful heat delivered / fuel energy input (heat-to-fuel ratio) for the dominant unit type.<br>
+    <strong>Heat demand</strong> = Fuel (TJ) × η × ε</p>
+  </div>
+</div>
+
+<div class="legend">
+  <span><span class="dot dot-boiler"></span> Steam / boiler heat</span>
+  <span><span class="dot dot-direct"></span> Direct process heat (kilns, furnaces, heaters)</span>
+  <span><span class="dot dot-chp"></span>   CHP — heat fraction only</span>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>Activity</th>
+  <th>Sector</th>
+  <th>Data (excl. 1c)<br>n · fuel TJ</th>
+  <th>Dominant Fuels<br>(your dataset)</th>
+  <th>Primary Unit Types</th>
+  <th class="center">End-Use Split</th>
+  <th class="center">ε<br>recommended</th>
+  <th class="center">η</th>
+  <th>Notes &amp; Source</th>
+</tr>
+</thead>
+<tbody>
+
+<!-- ══════════════════ ACTIVITY 1 (excl 1c) ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">1(a)</td>
+  <td class="act-name">Petroleum Refineries</td>
+  <td class="act-sub">n=100<br>1,123 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-other">OtherGas 70%</span><br>
+    <span class="fuel-pill fuel-gas">Gas 18%</span>
+    <span class="fuel-pill fuel-liquid">Liquid 9%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Process furnaces / heaters</span>
+    <span class="unit-tag">Steam boilers</span>
+    <span class="unit-tag">CHP steam turbines</span>
+    <span class="unit-tag">Gas turbines + HRSG</span>
+    <span class="unit-tag">Fired reboilers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:55%"></div>
+      <div class="split-seg seg-boiler" style="width:25%"></div>
+      <div class="split-seg seg-chp"   style="width:20%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct furnaces: <span class="val">~55%</span></span>
+      <span class="split-label">Steam: <span class="val">~25%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~20%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.78</div>
+    <div class="eps-range">Furnace: 0.75–0.80<br>Boiler: 0.88–0.92<br>Weighted avg</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">all combustion<br>= heat</div>
+  </td>
+  <td class="notes-cell">
+    "OtherGases" = refinery fuel gas (still gas, H₂, C₁–C₂) — byproduct burned on-site; all goes to heat. Process furnaces dominant (distillation, cracking, reforming; 300–500°C). CHP common at large refineries. η = 1.0 — no calcination process emissions.
+    <br><span class="src">ε: LCP BREF 2017; Saad et al. 2026 (furnace 75%, boiler 88–94%)</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">1(b)</td>
+  <td class="act-name">Coke Ovens</td>
+  <td class="act-sub">n=8<br>49 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-other">OtherGas ~60%</span>
+    <span class="fuel-pill fuel-coal">Coal ~35%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Coke oven batteries</span>
+    <span class="unit-tag">Under-firing burners</span>
+    <span class="unit-tag">By-product recovery boilers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:80%"></div>
+      <div class="split-seg seg-boiler" style="width:20%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct carbonisation: <span class="val">~80%</span></span>
+      <span class="split-label">Steam recovery: <span class="val">~20%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.72</div>
+    <div class="eps-range">0.65–0.78<br>high-temp losses</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">combustion<br>only</div>
+  </td>
+  <td class="notes-cell">
+    Coking = high-temp direct heating (~1000–1100°C). "OtherGases" = coke oven gas (COG) used as under-firing fuel — all combustion for heat. Lower ε due to high exhaust losses. η = 1.0.
+    <br><span class="src">ε: Iron &amp; Steel BREF 2012; LCP BREF 2017</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 2 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">2(b)</td>
+  <td class="act-name">Iron &amp; Steel<br>(blast furnace / BOF)</td>
+  <td class="act-sub">n=29<br>82 PJ dominant</td>
+  <td>
+    <span class="fuel-pill fuel-other">OtherGas 56%</span>
+    <span class="fuel-pill fuel-coal">Coal 20%</span>
+    <span class="fuel-pill fuel-gas">Gas 19%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Blast furnace stoves</span>
+    <span class="unit-tag">Hot blast stoves</span>
+    <span class="unit-tag">Reheating furnaces</span>
+    <span class="unit-tag">Sinter plants</span>
+    <span class="unit-tag">CHP boilers (BFG-fired)</span>
+    <span class="unit-tag">Ladle preheaters</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:65%"></div>
+      <div class="split-seg seg-boiler" style="width:15%"></div>
+      <div class="split-seg seg-chp"   style="width:20%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct process: <span class="val">~65%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~20%</span></span>
+      <span class="split-label">Steam: <span class="val">~15%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.72</div>
+    <div class="eps-range">0.65–0.80<br>high-temp avg</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-part">~0.85</div>
+    <div class="eta-sub">coal partial:<br>~30% reducing<br>agent, not heat</div>
+  </td>
+  <td class="notes-cell">
+    <span class="warn">⚠</span> "OtherGases" = blast furnace gas (BFG) + COG — byproducts, all burned for heat, η=1.0 for gas fraction. <strong>Coal fraction: ~30% is reducing agent</strong> (coke in blast furnace), not combusted for heat → apply η≈0.70 to coal specifically, or η≈0.85 overall. Dominant process is high-temp direct heat (&gt;1000°C).
+    <br><span class="src">η: IEA Iron &amp; Steel roadmap 2020; JRC Iron &amp; Steel BREF 2012</span>
+    <br><span class="src">ε: Saad et al. 2026 (direct process 75%)</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">2(e)/(f)</td>
+  <td class="act-name">Non-ferrous Metals<br>(Pb, Zn, Cu, precious)</td>
+  <td class="act-sub">n=16<br>~40 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-other">OtherGas ~40%</span>
+    <span class="fuel-pill fuel-gas">Gas ~35%</span>
+    <span class="fuel-pill fuel-coal">Coal ~15%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Smelting furnaces</span>
+    <span class="unit-tag">Reverberatory furnaces</span>
+    <span class="unit-tag">Roasters</span>
+    <span class="unit-tag">Anode furnaces</span>
+    <span class="unit-tag">Steam boilers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:70%"></div>
+      <div class="split-seg seg-boiler" style="width:20%"></div>
+      <div class="split-seg seg-chp"   style="width:10%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct smelting: <span class="val">~70%</span></span>
+      <span class="split-label">Steam: <span class="val">~20%</span></span>
+      <span class="split-label">CHP: <span class="val">~10%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.72</div>
+    <div class="eps-range">0.65–0.78<br>furnace-dominated</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">~0.90</div>
+    <div class="eta-sub">some ore-process<br>CO₂ possible</div>
+  </td>
+  <td class="notes-cell">
+    High-temp direct process heat (800–1200°C). η close to 1.0 — most emissions from combustion. Secondary Al uses rotary furnaces (fuel-fired); primary Al is electricity-dominated (EAF) so unlikely in this matched LCP set. Some roasting generates SO₂ process emissions.
+    <br><span class="src">ε: Non-ferrous Metals BREF 2017</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 3 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">3(a)</td>
+  <td class="act-name">Cement Clinker Kilns</td>
+  <td class="act-sub">n=9<br>35 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~45%</span>
+    <span class="fuel-pill fuel-other">OtherGas ~35%</span>
+    <span class="fuel-pill fuel-coal">Coal ~15%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Rotary kilns</span>
+    <span class="unit-tag">Precalciners</span>
+    <span class="unit-tag">Cyclone preheater towers</span>
+    <span class="unit-tag">Raw meal dryers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:95%"></div>
+      <div class="split-seg seg-boiler" style="width:5%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct kiln: <span class="val">~95%</span></span>
+      <span class="split-label">Utilities: <span class="val">~5%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.75</div>
+    <div class="eps-range">0.70–0.80<br>rotary kiln</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-low">0.40</div>
+    <div class="eta-sub">60% of CO₂ =<br>calcination,<br>not combustion</div>
+  </td>
+  <td class="notes-cell">
+    <span class="warn">⚠ Critical η:</span> CaCO₃ → CaO + CO₂. Calcination produces ~60% of total cement CO₂ — a process emission with no heat counterpart. Only 40% of reported CO₂ is from fuel combustion. Kiln temperatures &gt;1400°C. ε = 0.75 per Saad et al. and EU Cement BREF.
+    <br><span class="src">η: Saad et al. 2026; CARB cement inventory; EU Cement BREF 2013</span>
+    <br><span class="src">ε: Liu et al. 2015 J. Energy Inst.; Saad et al. 2026</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">3(b)</td>
+  <td class="act-name">Lime Production</td>
+  <td class="act-sub">n=2<br>2 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~60%</span>
+    <span class="fuel-pill fuel-coal">Coal ~25%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Shaft kilns (PFR)</span>
+    <span class="unit-tag">Rotary kilns</span>
+    <span class="unit-tag">Parallel-flow regenerative kilns</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:95%"></div>
+      <div class="split-seg seg-boiler" style="width:5%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct kiln: <span class="val">~95%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.78</div>
+    <div class="eps-range">Shaft: 0.80<br>Rotary: 0.72</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-low">0.45</div>
+    <div class="eta-sub">~55% calcination<br>CO₂</div>
+  </td>
+  <td class="notes-cell">
+    Same calcination logic as cement. ~55% of lime CO₂ is from CaCO₃ decomposition. η = 0.45. Kiln temperatures 900–1200°C. PFR shaft kilns most efficient in EU (ε ~0.80). Rotary kilns less efficient (ε ~0.72).
+    <br><span class="src">η/ε: Lime BREF 2013; Cement &amp; Lime BREF revision 2019</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">3(c)/(c)(i–iii)</td>
+  <td class="act-name">Glass Manufacturing</td>
+  <td class="act-sub">n=21 combined<br>~35 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~55%</span>
+    <span class="fuel-pill fuel-other">OtherGas ~35%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">End-fired regenerative furnaces</span>
+    <span class="unit-tag">Cross-fired furnaces</span>
+    <span class="unit-tag">Oxy-fuel furnaces</span>
+    <span class="unit-tag">Electric boosters</span>
+    <span class="unit-tag">Lehrs (annealing)</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:90%"></div>
+      <div class="split-seg seg-boiler" style="width:10%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct melting: <span class="val">~90%</span></span>
+      <span class="split-label">Utilities: <span class="val">~10%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge low">0.48</div>
+    <div class="eps-range">Regenerative: 0.45–0.55<br>Oxy-fuel: 0.55–0.65</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">0.95</div>
+    <div class="eta-sub">minimal process<br>CO₂</div>
+  </td>
+  <td class="notes-cell">
+    η ≈ 0.95 — nearly all CO₂ is from combustion. Low ε because glass melting at 1400–1600°C has large exhaust losses; regenerative furnaces recover heat through checkerwork (effective ε 0.45–0.55 net). "OtherGases" may be producer gas or oxy-fuel off-gas. Container vs. flat glass differ in energy intensity.
+    <br><span class="src">ε: Glass BREF 2012; Agora Industry 2024</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">3(e)</td>
+  <td class="act-name">Mineral Fibres<br>(glass/stone wool)</td>
+  <td class="act-sub">n=6<br>~5 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~70%</span>
+    <span class="fuel-pill fuel-other">OtherGas ~20%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Tank furnaces</span>
+    <span class="unit-tag">Cupola furnaces (stone wool)</span>
+    <span class="unit-tag">Curing ovens</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:85%"></div>
+      <div class="split-seg seg-boiler" style="width:15%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct melting: <span class="val">~85%</span></span>
+      <span class="split-label">Steam: <span class="val">~15%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.68</div>
+    <div class="eps-range">0.60–0.75</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">0.95</div>
+  </td>
+  <td class="notes-cell">
+    Melting at 1400–1550°C (glass wool) or ~1500°C (stone wool). Cupola furnaces use coke as both fuel and reducing/melting agent — η slightly below 1.0 for stone wool specifically. Similar to glass sector in terms of ε.
+    <br><span class="src">ε: Mineral Wool BREF 2001 (under revision)</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 4 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">4(a)<br><small>organic chemicals,<br>olefins, petrochems</small></td>
+  <td class="act-name">Basic Organic<br>Chemicals</td>
+  <td class="act-sub">n=147<br>420 PJ dominant</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~50%</span>
+    <span class="fuel-pill fuel-other">OtherGas ~30%</span>
+    <span class="fuel-pill fuel-lignite">Lignite ~8%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Steam crackers</span>
+    <span class="unit-tag">Process furnaces</span>
+    <span class="unit-tag">CHP steam turbines</span>
+    <span class="unit-tag">Industrial boilers</span>
+    <span class="unit-tag">Fired reboilers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:45%"></div>
+      <div class="split-seg seg-boiler" style="width:30%"></div>
+      <div class="split-seg seg-chp"   style="width:25%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct furnaces: <span class="val">~45%</span></span>
+      <span class="split-label">Steam: <span class="val">~30%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~25%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.80</div>
+    <div class="eps-range">Furnace: 0.75–0.80<br>Boiler: 0.88–0.92<br>CHP: 0.40<br>Weighted avg</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">if no H₂<br>reforming</div>
+  </td>
+  <td class="notes-cell">
+    η = 1.0 for olefin/petrochemical plants. CHP very common in large chemical complexes. "OtherGases" = tail gas, syn gas, refinery gas — all combusted for heat. High variability within Activity 4(a): differentiate from H₂/ammonia sub-processes where possible.
+    <br><span class="src">ε: Saad et al. 2026; Chemicals BREF 2017; Fraunhofer ISI 2024</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">4(a) — H₂ plants<br><small>steam reforming</small></td>
+  <td class="act-name">Hydrogen Production<br><small>(subset of 4a/4b)</small></td>
+  <td class="act-sub">subset of 4(a)<br>flag separately</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas dominant</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Steam methane reformers</span>
+    <span class="unit-tag">Reformer furnaces</span>
+    <span class="unit-tag">Shift reactors</span>
+    <span class="unit-tag">PSA units</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:15%"></div>
+      <div class="split-seg seg-boiler" style="width:85%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Heat for reaction: <span class="val">~15%</span></span>
+      <span class="split-label">Reaction CO₂: <span class="val">~85%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.75</div>
+    <div class="eps-range">reformer furnace</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-low">0.14</div>
+    <div class="eta-sub">86% of CO₂ is<br>from CH₄+H₂O<br>reaction</div>
+  </td>
+  <td class="notes-cell">
+    <span class="warn">⚠ Special case:</span> Steam methane reforming CH₄ + H₂O → CO + H₂ produces large CO₂ from the reaction itself. Only ~14% of CO₂ at H₂ plants is from combustion for heat. η = 0.14 per Saad et al. (2026). Identify H₂ plants by NAICS/facility name if possible and apply separately.
+    <br><span class="src">η: Saad et al. 2026; EPA GHGRP Chemicals Sector Profile</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">4(b)/(c)<br><small>inorganic, fertilisers</small></td>
+  <td class="act-name">Basic Inorganic<br>Chemicals &amp; Fertilisers</td>
+  <td class="act-sub">n=86<br>~250 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~50%</span>
+    <span class="fuel-pill fuel-other">OtherGas ~25%</span>
+    <span class="fuel-pill fuel-lignite">Lignite ~10%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Steam boilers</span>
+    <span class="unit-tag">CHP units</span>
+    <span class="unit-tag">Process furnaces</span>
+    <span class="unit-tag">Granulation dryers</span>
+    <span class="unit-tag">Reformers (NH₃)</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:40%"></div>
+      <div class="split-seg seg-direct" style="width:30%"></div>
+      <div class="split-seg seg-chp"   style="width:30%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam: <span class="val">~40%</span></span>
+      <span class="split-label">Direct: <span class="val">~30%</span></span>
+      <span class="split-label">CHP: <span class="val">~30%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.82</div>
+    <div class="eps-range">0.78–0.90<br>boiler-heavy</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-part">0.75</div>
+    <div class="eta-sub">N-fertiliser: ~25%<br>feedstock/process</div>
+  </td>
+  <td class="notes-cell">
+    Ammonia plants: gas used as both feedstock and fuel → η &lt; 1.0 for NH₃ facilities. N₂O process emissions significant. Chlor-alkali: electricity-dominant (unlikely in LCP set). Apply η ≈ 0.75 for fertiliser sub-sector; η = 1.0 for other inorganic chemicals.
+    <br><span class="src">ε: Chemicals BREF; Saad et al. 2026 (boiler 88–94%)</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 5 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">5(b)</td>
+  <td class="act-name">Municipal Waste<br>Incineration (WtE)</td>
+  <td class="act-sub">n=96<br>193 PJ dominant</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas 54%</span>
+    <span class="fuel-pill fuel-coal">Coal 26%</span>
+    <span class="fuel-pill fuel-biomass">Biomass 12%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Moving grate incinerators</span>
+    <span class="unit-tag">Waste-to-energy boilers</span>
+    <span class="unit-tag">Steam turbines (CHP)</span>
+    <span class="unit-tag">Auxiliary gas/coal burners</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:55%"></div>
+      <div class="split-seg seg-chp"   style="width:45%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam/DH: <span class="val">~55%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~45%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.82</div>
+    <div class="eps-range">auxiliary boiler<br>0.80–0.88</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">reported fuel<br>= auxiliary<br>combustion only</div>
+  </td>
+  <td class="notes-cell">
+    <span class="warn">⚠ Important distinction:</span> The fuel reported in LCP (gas, coal) is <strong>auxiliary burner fuel only</strong> — the main energy source is waste (not in LCP fuel columns). η = 1.0 for the reported fuel because auxiliary burners are used purely to maintain temperatures. ε = standard gas boiler. Note: actual waste heat recovery efficiency (~80% steam conversion) is separate.
+    <br><span class="src">EU Waste Incineration BREF 2019</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">5(a)/(c)</td>
+  <td class="act-name">Hazardous &amp; Non-hazardous<br>Waste Disposal</td>
+  <td class="act-sub">n=26<br>~100 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~60%</span>
+    <span class="fuel-pill fuel-coal">Coal ~20%</span>
+    <span class="fuel-pill fuel-biomass">Biomass ~15%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Rotary kiln incinerators</span>
+    <span class="unit-tag">High-temp afterburners</span>
+    <span class="unit-tag">Waste-fired boilers</span>
+    <span class="unit-tag">Secondary combustion chambers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-direct" style="width:70%"></div>
+      <div class="split-seg seg-boiler" style="width:30%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Direct (kiln): <span class="val">~70%</span></span>
+      <span class="split-label">Heat recovery: <span class="val">~30%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge moderate">0.75</div>
+    <div class="eps-range">rotary kiln avg</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">auxiliary fuel<br>= combustion<br>for temperature</div>
+  </td>
+  <td class="notes-cell">
+    Same auxiliary fuel logic as 5(b). Reported fuel maintains &gt;850°C per EU Waste Incineration Directive. η = 1.0 for reported LCP fuel. Less heat recovery than municipal WtE. Rotary kilns used for hazardous waste.
+    <br><span class="src">Waste Incineration BREF 2019; IED Art. 50</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 6 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">6(a)</td>
+  <td class="act-name">Pulp &amp; Paper Mills<br>(integrated / kraft)</td>
+  <td class="act-sub">n=65<br>~403 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-biomass">Biomass ~55%</span>
+    <span class="fuel-pill fuel-gas">Gas ~30%</span>
+    <span class="fuel-pill fuel-other">OtherSolid ~8%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Recovery boilers (black liquor)</span>
+    <span class="unit-tag">Bark / biomass boilers</span>
+    <span class="unit-tag">CHP back-pressure turbines</span>
+    <span class="unit-tag">Lime kilns</span>
+    <span class="unit-tag">Paper machine dryers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:50%"></div>
+      <div class="split-seg seg-chp"   style="width:40%"></div>
+      <div class="split-seg seg-direct" style="width:10%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam boilers: <span class="val">~50%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~40%</span></span>
+      <span class="split-label">Direct (lime kiln): <span class="val">~10%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.82</div>
+    <div class="eps-range">Recovery boiler: 0.65–0.72<br>Bark boiler: 0.80–0.85<br>Gas boiler: 0.88–0.92<br>Weighted avg</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">all combustion<br>= heat</div>
+  </td>
+  <td class="notes-cell">
+    η = 1.0 — all combustion for heat. Black liquor recovery boiler has lower ε (65–72%) because it also recovers pulping chemicals. CHP near-universal in Scandinavian integrated mills. Steam is dominant heat carrier (100–180°C) for pulping, evaporation, drying. "OtherSolidFuels" = bark, wood waste, sludge.
+    <br><span class="src">ε: Pulp &amp; Paper BREF 2015; Fraunhofer ISI 2016 Mapping EU Heat</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">6(b)</td>
+  <td class="act-name">Wood Products<br>(panels, sawmills)</td>
+  <td class="act-sub">n=98<br>~331 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-biomass">Biomass ~50%</span>
+    <span class="fuel-pill fuel-gas">Gas ~35%</span>
+    <span class="fuel-pill fuel-other">OtherSolid ~10%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Wood waste / biomass boilers</span>
+    <span class="unit-tag">Thermal oil heaters</span>
+    <span class="unit-tag">Direct-fired dryers</span>
+    <span class="unit-tag">Hot press platens (steam)</span>
+    <span class="unit-tag">CHP units</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:45%"></div>
+      <div class="split-seg seg-direct" style="width:35%"></div>
+      <div class="split-seg seg-chp"   style="width:20%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam / thermal oil: <span class="val">~45%</span></span>
+      <span class="split-label">Direct dryers: <span class="val">~35%</span></span>
+      <span class="split-label">CHP: <span class="val">~20%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.80</div>
+    <div class="eps-range">Biomass boiler: 0.80–0.85<br>Gas boiler: 0.88<br>Direct dryer: 0.72–0.78</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">all combustion<br>= heat</div>
+  </td>
+  <td class="notes-cell">
+    η = 1.0. Wood-based panels (MDF, OSB, particleboard) require high-temp drying (150–200°C) and hot pressing. Direct-fired dryers common in panel sector. Biomass = wood waste from production. Lower temperature range than paper mills overall.
+    <br><span class="src">ε: Wood-Based Panels BREF 2015; Saad et al. 2026</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 8 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">8(b)/(b)(ii)</td>
+  <td class="act-name">Sugar Production<br>(beet &amp; cane)</td>
+  <td class="act-sub">n=48<br>87 PJ · 98% of Act. 8</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas 86%</span>
+    <span class="fuel-pill fuel-lignite">Lignite 6%</span>
+    <span class="fuel-pill fuel-biomass">Biomass 4%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">High-pressure steam boilers</span>
+    <span class="unit-tag">Multi-effect evaporators</span>
+    <span class="unit-tag">CHP back-pressure turbines</span>
+    <span class="unit-tag">Juice heaters</span>
+    <span class="unit-tag">Vacuum pans</span>
+    <span class="unit-tag">Pulp dryers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:50%"></div>
+      <div class="split-seg seg-chp"   style="width:40%"></div>
+      <div class="split-seg seg-direct" style="width:10%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam boiler: <span class="val">~50%</span></span>
+      <span class="split-label">CHP heat: <span class="val">~40%</span></span>
+      <span class="split-label">Direct drying: <span class="val">~10%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.85</div>
+    <div class="eps-range">Gas boiler: 0.88–0.92<br>CHP: 0.40 heat frac<br>Weighted avg ≈ 0.85</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+    <div class="eta-sub">all combustion<br>= heat</div>
+  </td>
+  <td class="notes-cell">
+    η = 1.0. Sugar processing is highly steam-intensive — multi-effect evaporation is dominant energy use (100–130°C). CHP (back-pressure turbines) near-universal in EU beet sugar plants. Seasonal / campaign-based operation. Fully consistent with Eichenlaub (2026) flat 85% assumption.
+    <br><span class="src">ε: Food &amp; Drink BREF 2019; Eichenlaub 2026</span>
+  </td>
+</tr>
+
+<tr class="act-row">
+  <td class="act-num">8(c)/(d)/(e)</td>
+  <td class="act-name">Dairy, Brewing &amp;<br>Food Processing</td>
+  <td class="act-sub">n=1 (8c) in data<br>small sample</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas ~85%</span>
+    <span class="fuel-pill fuel-biomass">Biomass ~10%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Steam boilers</span>
+    <span class="unit-tag">Pasteurisation systems</span>
+    <span class="unit-tag">Spray dryers</span>
+    <span class="unit-tag">Evaporators</span>
+    <span class="unit-tag">CHP (larger plants)</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:65%"></div>
+      <div class="split-seg seg-direct" style="width:25%"></div>
+      <div class="split-seg seg-chp"   style="width:10%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam: <span class="val">~65%</span></span>
+      <span class="split-label">Direct heat: <span class="val">~25%</span></span>
+      <span class="split-label">CHP: <span class="val">~10%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.85</div>
+    <div class="eps-range">0.82–0.90<br>boiler-dominated</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+  </td>
+  <td class="notes-cell">
+    η = 1.0. Low-temp steam processes (70–150°C). Spray drying (dairy powder) requires higher-temp air (~200°C). Brewing: steam for mashing, wort boiling, pasteurisation. Standard boiler ε applies. Eichenlaub's 85% assumption is fully appropriate here.
+    <br><span class="src">ε: Food &amp; Drink BREF 2019; Eichenlaub 2026</span>
+  </td>
+</tr>
+
+<!-- divider -->
+<tr class="divider"><td colspan="9"></td></tr>
+
+<!-- ══════════════════ ACTIVITY 9 ══════════════════ -->
+<tr class="act-row">
+  <td class="act-num">9(c)</td>
+  <td class="act-name">Tanning / Other<br>Activities</td>
+  <td class="act-sub">n=4<br>~8 PJ</td>
+  <td>
+    <span class="fuel-pill fuel-gas">Gas 100%</span>
+  </td>
+  <td class="units-cell">
+    <span class="unit-tag">Steam boilers</span>
+    <span class="unit-tag">Hot water systems</span>
+    <span class="unit-tag">Drying chambers</span>
+  </td>
+  <td class="split-cell">
+    <div class="split-bar">
+      <div class="split-seg seg-boiler" style="width:70%"></div>
+      <div class="split-seg seg-direct" style="width:30%"></div>
+    </div>
+    <div class="split-labels">
+      <span class="split-label">Steam / hot water: <span class="val">~70%</span></span>
+      <span class="split-label">Direct drying: <span class="val">~30%</span></span>
+    </div>
+  </td>
+  <td class="eps-cell">
+    <div class="eps-badge">0.85</div>
+    <div class="eps-range">gas boiler<br>0.88–0.92</div>
+  </td>
+  <td class="eta-cell">
+    <div class="eta-val eta-one">1.0</div>
+  </td>
+  <td class="notes-cell">
+    Tiny sample. Low-temp processes (&lt;150°C). η = 1.0, all gas = heat. Standard gas boiler assumption applies directly. Very small contribution to total dataset.
+    <br><span class="src">ε: Eichenlaub 2026; EPA boiler efficiency norms</span>
+  </td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="footer-box">
+  <div class="col2">
+    <div>
+      <strong>ε Sources:</strong><br>
+      Saad et al. (2026) Environ. Res. Lett. — furnace 75%, boiler 88–94%, CHP heat 40%<br>
+      Eichenlaub (2026) — flat 85% boiler for food/paper/sugar; justified for η=1.0 sectors<br>
+      EPA CHP efficiency methods — gas boiler 80%, biomass 75%, coal 83%<br>
+      EU BREF documents: LCP (2017), Iron &amp; Steel (2012), Cement (2013/2019), Glass (2012), Pulp &amp; Paper (2015), Food &amp; Drink (2019), Waste Incineration (2019)<br>
+      Fraunhofer ISI / Agora Industry (2024) — direct electrification of industrial process heat
+    </div>
+    <div>
+      <strong>η Sources:</strong><br>
+      Cement η=0.40: Saad et al. (2026); EU Cement BREF; CARB GHG inventory<br>
+      Lime η=0.45: Lime BREF (2013)<br>
+      H₂ reforming η=0.14: Saad et al. (2026); EPA GHGRP Chemicals Sector Profile<br>
+      Iron &amp; steel η≈0.85: IEA Iron &amp; Steel Roadmap (2020); Iron &amp; Steel BREF<br>
+      NH₃/fertiliser η≈0.75: Saad et al. (2026) analogy; Chemicals BREF<br>
+      All other sectors η=1.0: Eichenlaub (2026) implicit; no process chemistry CO₂<br><br>
+      <strong>Fuel mix %:</strong> computed from eprtr_lcp_matched.csv (n=803 facilities, excl. 1c)
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

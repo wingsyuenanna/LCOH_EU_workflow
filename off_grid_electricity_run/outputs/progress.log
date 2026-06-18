@@ -60,3 +60,45 @@
 [2026-06-08T18:20:26Z] PHASE_3_CROSSRUN_CSV: Wrote 860 cross-run comparison rows
 [2026-06-08T18:20:26Z] PHASE_3_DONE: All output files written
 [2026-06-08T18:20:26Z] PHASE_4_SUMMARY: Gas LCOH avg=80.7 EUR/MWh_th | HP avg=70.8 | HB avg=45.2 | Least-cost breakdown: gas=311 HP=0 HB=1448 | Confidence: HIGH=0 MEDIUM=1203 LOW=556 NOT_COMPUTED=1832
+[2026-06-11T16:14:16Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-06-11T16:14:16Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-11T16:14:16Z] PHASE_1_DONE: BNEF PV-only 394 country-years, HP (PV+BESS) 394 country-years, HB CAPEX 394, gas 619 records
+[2026-06-11T16:14:16Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-11T16:14:16Z] PHASE_2_DONE: Processed 710 facilities, skipped 1464 (no heat data)
+[2026-06-11T16:14:16Z] PHASE_3_START: Writing output files
+[2026-06-11T16:14:17Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-11T16:14:17Z] PHASE_3_PRICE_LOG: Wrote 2130 price log rows
+[2026-06-11T16:14:17Z] PHASE_4_START: Computing summary statistics
+[2026-06-11T16:14:17Z] PHASE_4_DONE: Computed LCOH for 710 facilities with gas, 47 with HP, 710 with HB
+[2026-06-11T16:14:17Z] PHASE_4_CROSSRUN: Cross-run comparison done; 392 flagged facilities
+[2026-06-11T16:14:17Z] PHASE_3_CROSSRUN_CSV: Wrote 392 cross-run comparison rows
+[2026-06-11T16:14:17Z] PHASE_3_DONE: All output files written
+[2026-06-11T16:14:17Z] PHASE_4_SUMMARY: Gas LCOH avg=83.8 EUR/MWh_th | HP avg=70.8 | HB avg=45.5 | Least-cost breakdown: gas=112 HP=0 HB=598 | Confidence: HIGH=0 MEDIUM=489 LOW=221 NOT_COMPUTED=2881
+[2026-06-11T16:29:58Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-06-11T16:29:58Z] PHASE_1_EPSILON: Loaded 26 activity→epsilon mappings
+[2026-06-11T16:29:58Z] PHASE_1_DONE: BNEF PV-only 394 country-years, HP (PV+BESS) 394 country-years, HB CAPEX 394, gas 619 records
+[2026-06-11T16:29:58Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-11T16:29:58Z] PHASE_2_DONE: Processed 110 facilities, skipped 5 (no heat data)
+[2026-06-11T16:29:58Z] PHASE_3_START: Writing output files
+[2026-06-11T16:29:58Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-11T16:29:58Z] PHASE_3_PRICE_LOG: Wrote 330 price log rows
+[2026-06-11T16:29:58Z] PHASE_4_START: Computing summary statistics
+[2026-06-11T16:29:58Z] PHASE_4_DONE: Computed LCOH for 110 facilities with gas, 11 with HP, 110 with HB
+[2026-06-11T16:29:58Z] PHASE_4_CROSSRUN: Cross-run comparison done; 20 flagged facilities
+[2026-06-11T16:29:58Z] PHASE_3_CROSSRUN_CSV: Wrote 20 cross-run comparison rows
+[2026-06-11T16:29:58Z] PHASE_3_DONE: All output files written
+[2026-06-11T16:29:58Z] PHASE_4_SUMMARY: Gas LCOH avg=93.1 EUR/MWh_th | HP avg=70.6 | HB avg=43.1 | Least-cost breakdown: gas=0 HP=0 HB=110 | Confidence: HIGH=0 MEDIUM=72 LOW=38 NOT_COMPUTED=3481
+[2026-06-17T20:48:15Z] PHASE_1_START: Loading BNEF off-grid electricity + Eurostat gas
+[2026-06-17T20:48:15Z] PHASE_1_HEAT_DEMAND: Loaded 3563 facility heat demand records
+[2026-06-17T20:48:15Z] PHASE_1_DONE: BNEF PV-only 394 country-years, HP (PV+BESS) 394 country-years, HB CAPEX 394, gas 619 records
+[2026-06-17T20:48:15Z] PHASE_2_START: Processing 3591 facilities
+[2026-06-17T20:48:15Z] PHASE_2_DONE: Processed 101 facilities, skipped 14 (no heat data)
+[2026-06-17T20:48:15Z] PHASE_3_START: Writing output files
+[2026-06-17T20:48:15Z] PHASE_3_RESULTS: Wrote 3591 rows to lcoh_results.csv
+[2026-06-17T20:48:15Z] PHASE_3_PRICE_LOG: Wrote 303 price log rows
+[2026-06-17T20:48:15Z] PHASE_4_START: Computing summary statistics
+[2026-06-17T20:48:15Z] PHASE_4_DONE: Computed LCOH for 101 facilities with gas, 11 with HP, 101 with HB
+[2026-06-17T20:48:15Z] PHASE_4_CROSSRUN: Cross-run comparison done; 19 flagged facilities
+[2026-06-17T20:48:15Z] PHASE_3_CROSSRUN_CSV: Wrote 19 cross-run comparison rows
+[2026-06-17T20:48:15Z] PHASE_3_DONE: All output files written
+[2026-06-17T20:48:15Z] PHASE_4_SUMMARY: Gas LCOH avg=93.2 EUR/MWh_th | HP avg=70.6 | HB avg=43.1 | Least-cost breakdown: gas=0 HP=0 HB=101 | Confidence: HIGH=0 MEDIUM=71 LOW=30 NOT_COMPUTED=3490

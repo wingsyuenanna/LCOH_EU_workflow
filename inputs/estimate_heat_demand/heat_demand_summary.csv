@@ -1,0 +1,50 @@
+eprtr_activity,activity_label,routing_mode,n,substitutable_TJ,heat_demand_TJ
+1(a),Petroleum refineries,tech_split,74,349983.47,270362.3
+6(a),Pulp & paper,tech_split,58,216532.34,184485.58
+5(b),Municipal waste incineration (WtE),fuel_routing,81,194458.56,163292.83000000002
+6(b),Wood products / panels,tech_split,82,144889.27,103088.76
+4(a)(i),Basic organic chemicals / olefins,tech_split,24,88885.75,64886.59
+4(a),Basic organic chemicals / olefins,tech_split,22,80394.59,58688.05
+5(a),Hazardous waste disposal,fuel_routing,16,69911.23000000001,58449.71
+4(c),"Other chemicals (P, N, agro)",tech_split,12,66436.14,50491.46
+4(a)(viii),Basic organic chemicals / olefins,tech_split,19,69110.94,50450.979999999996
+4(a)(ii),Basic organic chemicals / olefins,tech_split,34,68443.64,49963.85
+8(b)(ii),Sugar production,tech_split,38,64979.1,43860.87
+4(b)(v),Basic inorganic chemicals / fertiliser,tech_split,13,49968.05,26682.949999999997
+4(b)(i),Basic inorganic chemicals / fertiliser,tech_split,16,46047.63,24589.42
+5(d),Landfill / other waste,fuel_routing,3,28398.56,24127.85
+2(b),Iron & Steel (BF/BOF),fuel_routing,24,32116.55,22479.100000000002
+4(b),Basic inorganic chemicals / fertiliser,tech_split,16,42034.56,22446.440000000002
+4(b)(iv),Basic inorganic chemicals / fertiliser,tech_split,10,41383.020000000004,22098.56
+5(c),Non-hazardous waste disposal,fuel_routing,6,22092.85,18335.75
+2(e),Non-ferrous (primary),fuel_routing,5,19402.61,14722.64
+1(b),Coke ovens (LCP-reported aux only),tech_split,3,17076.25,14514.82
+8(b),Sugar production,tech_split,7,14902.24,10059.0
+3(a),Cement clinker,tech_split,7,32037.32,9675.28
+9(c),Tanning / other,tech_split,4,7916.74,6657.97
+4(a)(ix),Basic organic chemicals / olefins,tech_split,3,7337.94,5356.679999999999
+4(a)(vi),Basic organic chemicals / olefins,tech_split,4,6916.709999999999,5049.2
+4(a)(iv),Basic organic chemicals / olefins,tech_split,5,6733.71,4915.62
+3(c),Glass,tech_split,11,9590.810000000001,4901.87
+4(b)(ii),Basic inorganic chemicals / fertiliser,tech_split,3,4719.25,2520.0699999999997
+3(e),Mineral fibres,tech_split,6,3461.7,2320.12
+8(c),Dairy / food processing,tech_split,1,2802.0,2240.2
+2(c)(i),"Hot/cold rolling, coating",fuel_routing,3,2197.15,1867.57
+4(a)(x),Basic organic chemicals / olefins,tech_split,1,2476.23,1807.65
+2(d),Ferrous metal foundries,fuel_routing,2,2002.99,1690.74
+2(a),Metal ore roasting/sintering,fuel_routing,1,1935.9,1645.52
+3(c)(i),Glass,tech_split,4,2563.45,1310.18
+3(c)(ii),Glass,tech_split,2,2259.7999999999997,1154.98
+4(b)(iii),Basic inorganic chemicals / fertiliser,tech_split,2,2093.81,1118.09
+5(g),Waste — other,fuel_routing,1,992.6,843.71
+4(a)(vii),Basic organic chemicals / olefins,tech_split,1,1054.2,769.57
+2(f),Non-ferrous (secondary),fuel_routing,4,985.24,753.72
+2(e)(i),Non-ferrous (primary),fuel_routing,4,786.63,599.99
+4(e),Other chemical processes,tech_split,4,429.15999999999997,364.79
+4(a)(iii),Basic organic chemicals / olefins,tech_split,1,496.68,362.58
+5(f),Waste — other,fuel_routing,2,213.78,181.71
+3(c)(iii),Glass,tech_split,1,223.53,114.25
+4(a)(xi),Basic organic chemicals / olefins,tech_split,1,120.9,88.26
+3(b),Lime,tech_split,2,52.269999999999996,18.43
+3(f),Other mineral (gypsum etc.),tech_split,1,16.39,13.11
+1(c),EXCLUDE — power stations,tech_split,1022,6525188.77,0.0

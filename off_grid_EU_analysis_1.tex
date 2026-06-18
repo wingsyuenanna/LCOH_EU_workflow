@@ -1,0 +1,338 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\doublespacing
+
+\usepackage{amsmath}
+\usepackage{booktabs}       % professional tables
+\usepackage{graphicx}       % figures
+\usepackage{float}          % [H] placement
+\usepackage{caption}
+\usepackage{subcaption}     % subfigures
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}         % author-year citations; swap for \usepackage[numbers]{natbib} if journal wants numbered
+\usepackage{xcolor}
+\usepackage{siunitx}        % consistent number/unit formatting e.g. \SI{45.5}{\EUR\per\MWh}
+\usepackage{longtable}      % tables that span pages
+\usepackage{multirow}
+\usepackage{lineno}         % line numbers for review; remove for final
+\linenumbers
+
+% --- Metadata ---
+\title{Levelized Cost of Heat Comparison for Electric and Natural Gas Pathways\\
+       at EU E-PRTR Industrial Facilities:\\
+       The Case for Off-Grid Solar with Thermal Heat Storage}
+
+\author{
+  Author Name\textsuperscript{1}\thanks{Corresponding author. \texttt{author@institution.edu}} \\
+  \textsuperscript{1}Department, Institution, City, Country
+  % Add co-authors as needed:
+  % \and Co-Author\textsuperscript{2} \\
+  % \textsuperscript{2}Department, Institution
+}
+
+\date{\today}
+
+% =====================================================================
+\begin{document}
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+% TODO: Write last. ~200 words.
+% Key points to hit:
+%   (1) Motivation: European industrial process heat represents a major
+%       decarbonization challenge.
+%   (2) Gap: most analyses use grid electricity prices, obscuring the
+%       economics of off-grid renewables.
+%   (3) Methods: LCOH comparison across three pathways (natural gas boiler,
+%       thermal heat battery, heat pump) for 110 EU E-PRTR/LCP facilities.
+%   (4) Key finding: off-grid solar prices shift heat battery LCOH from
+%       183.2 to 45.5 EUR/MWh, making it cheaper than natural gas at all
+%       110 sites versus none with grid prices.
+%   (5) Feasibility: 75 of 110 sites have sufficient land for on-site solar;
+%       the main barrier for the remaining 35 is high heat demand.
+%   (6) Policy implication: [TODO]
+
+\noindent\textbf{Keywords:} industrial decarbonization; levelized cost of heat; off-grid solar; thermal heat battery; heat pump; E-PRTR; European industry
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+% TODO: 3--5 paragraphs following this structure:
+%
+% Para 1 — Hook / motivation
+%   Decarbonizing industrial process heat is one of the harder segments
+%   of the energy transition. Cite Rosenow et al. and broader IEA/IPCC
+%   context on hard-to-abate industrial heat.
+%
+% Para 2 — Current landscape
+%   Heat pumps and electrification are increasingly discussed as pathways,
+%   but cost competitiveness depends heavily on electricity prices.
+%   Grid electricity in Europe (139--218 EUR/MWh) makes electrification
+%   expensive relative to gas for most large consumers.
+%
+% Para 3 — Gap in literature
+%   Off-grid generation (utility-scale solar + storage) as a direct
+%   electricity source for industrial heat has received limited attention
+%   at the facility level. Prior work has focused on national/sectoral
+%   aggregates and grid pricing scenarios.
+%
+% Para 4 — This paper
+%   We compare LCOH across three pathways — natural gas boiler, thermal
+%   heat battery (solar + storage), and heat pump — for 110 large
+%   combustion plant sites linked to E-PRTR facilities across Europe,
+%   using both grid and off-grid electricity prices. We further assess
+%   land feasibility for on-site solar generation at each facility.
+%
+% Para 5 — Roadmap sentence
+%   Section~\ref{sec:data} describes data sources; Section~\ref{sec:methods}
+%   the LCOH framework and feasibility methodology; Section~\ref{sec:results}
+%   presents results; Section~\ref{sec:discussion} discusses implications
+%   and limitations; Section~\ref{sec:conclusion} concludes.
+
+% =====================================================================
+\section{Data}
+\label{sec:data}
+
+\subsection{Facility Heat Demand (E-PRTR / LCP)}
+% TODO:
+%   - E-PRTR provides facility-level CO2 and pollutant data; LCP dataset
+%     provides fuel input for combustion plants >50 MW rated thermal input.
+%   - Describe the linking procedure between E-PRTR and LCP records.
+%   - 110 matched facilities after excluding Activity 1c (power generation).
+%   - Epsilon conversion factors: weighted-average fuel-to-heat efficiency
+%     by sector and technology mix (cite eprtr_epsilon_reference).
+%   - Caveat: LCP 50 MW threshold means heat demand estimates may
+%     understate true sectoral totals.
+
+\subsection{Natural Gas Prices}
+% TODO:
+%   - Eurostat dataset NRG\_PC\_203, Band I3, 2024.
+%   - Range: 50--81 EUR/MWh LHV.
+%   - LHV adjustment factor of 1.1098 applied to convert from GHV.
+%   - Caveat: national average prices; may slightly overstate costs for
+%     the largest consumers.
+
+\subsection{Grid Electricity Prices}
+% TODO:
+%   - Eurostat dataset NRG\_PC\_205, industrial band, 2024.
+%   - Range: 139--218 EUR/MWh.
+%   - Same national-average caveat as gas prices.
+
+\subsection{Off-Grid Electricity Prices (LCOE)}
+% TODO:
+%   - Calculated from Bloomberg NEF (BNEF) 2025 cost data: capex, annual
+%     opex, and cost of capital for utility-scale PV (fixed-axis) and
+%     battery storage, by country.
+%   - 84 sites matched directly to BNEF country data; 26 proxied from
+%     peer countries (by income level).
+%   - Solar capacity factors from PVGIS ERA5 API (lat/lon, fixed-axis,
+%     most recent complete year: 2023).
+%   - EUR/USD conversion: ECB 2024 annual average = 0.921.
+
+\subsection{Technology Cost Assumptions}
+
+% TODO: brief prose description of sources before the table.
+
+\begin{table}[H]
+  \centering
+  \caption{Technology capital and operating cost assumptions.}
+  \label{tab:tech_costs}
+  \begin{tabular}{llll}
+    \toprule
+    \textbf{Technology} & \textbf{Capex} & \textbf{Opex} & \textbf{Source} \\
+    \midrule
+    Gas boiler      & 75 \euro/kW$_\text{th}$                  & 1.5\% of capex & [TODO] \\
+    Thermal heat battery & 150 \euro/kW$_\text{th}$, 8-h storage & 0.5\% of capex & NREL 2025 \citep{wikoff2025} \\
+    Heat pump       & 1{,}200 \euro/kW$_\text{th}$              & 2.5\% of capex & IRENA 2022 \citep{irena2022hp} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Levelized Cost of Heat (LCOH)}
+% TODO:
+%   Write out the LCOH formula explicitly. Something like:
+%
+%   \begin{equation}
+%     \text{LCOH} = \frac{\text{CRF} \cdot \text{Capex} + \text{Opex}}
+%                        {E_\text{heat} \cdot \text{CF}_\text{plant}}
+%                   + \frac{P_\text{fuel}}{\eta}
+%                   + \tau \cdot \text{EF}
+%   \end{equation}
+%
+%   where CRF is the capital recovery factor (8\%, 20-year lifetime),
+%   $E_\text{heat}$ is annual heat demand, CF$_\text{plant}$ = 0.85
+%   (industrial process capacity factor), $P_\text{fuel}$ is the energy
+%   price (EUR/MWh), $\eta$ is conversion efficiency (boiler: 0.9),
+%   $\tau$ is the EU ETS carbon price (60 EUR/tCO$_2$ in 2024), and
+%   EF is the emission factor (natural gas: 0.202 tCO$_2$/MWh LHV).
+%
+%   Note: worked example in the draft (gas price = 30.63 EUR/MWh) is a
+%   good sanity-check box or appendix item.
+
+\subsection{Land Feasibility Assessment}
+% TODO:
+%   - Land cover: grassland, shrubland, cropland, bare land (exclude
+%     protected areas, slopes >5°).
+%   - 10 km buffer around each facility.
+%   - Overlap rule: shared buffer area allocated proportionally to
+%     heat demand.
+%   - Feasibility criterion: suitable land area $\geq$ land required
+%     to meet site heat demand given local solar capacity factor.
+%   - Land required derived from solar capacity factor (PVGIS) and
+%     assumed panel density [TODO: state W/m² assumption].
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{LCOH Comparison: Grid vs.\ Off-Grid Electricity}
+
+% TODO: 1--2 paragraphs interpreting Table~\ref{tab:lcoh}.
+
+\begin{table}[H]
+  \centering
+  \caption{Mean LCOH by pathway and electricity price scenario (EUR/MWh$_\text{th}$).}
+  \label{tab:lcoh}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Pathway}       & \textbf{Off-grid price} & \textbf{Grid price} \\
+    \midrule
+    Natural gas boiler     & 83.8  & 83.8  \\
+    Thermal heat battery   & 45.5  & 183.2 \\
+    Heat pump              & 70.8  & 79.3  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% TODO: note that at grid prices 99/110 sites have cheapest LCOH from
+% natural gas, 11 from heat pump; at off-grid prices all 110 sites are
+% cheapest with heat battery.
+
+\subsection{Site-Level Feasibility}
+
+% TODO: describe the 75 feasible / 35 infeasible split and Table~\ref{tab:feasibility}.
+
+\begin{table}[H]
+  \centering
+  \caption{Characteristics of feasible vs.\ infeasible sites.}
+  \label{tab:feasibility}
+  \begin{tabular}{lcc}
+    \toprule
+    & \textbf{Infeasible (35)} & \textbf{Feasible (75)} \\
+    \midrule
+    Mean heat demand (MWh$_\text{th}$/yr) & 1{,}092{,}000 & 300{,}000 \\
+    Mean land required (km²)              & 74.3          & 22.4      \\
+    Mean suitable land in buffer (km²)    & 26.2          & 111.5     \\
+    Mean coverage ratio                   & 0.32          & 194$\times$ (median: 7.7$\times$) \\
+    Mean suitability fraction of buffer   & 8.4\%         & 35.5\%    \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% TODO: discuss drivers of infeasibility:
+%   - High heat demand is the primary barrier.
+%   - Coastal/port locations (refineries, petrochemicals) have limited
+%     suitable land adjacent.
+%   - Low-temperature industries (sugar, pulp \& paper, glass,
+%     waste-to-energy) most feasible: rural locations, lower heat demand.
+
+\subsection{Geographic and Sectoral Patterns}
+% TODO: describe map figure here. Placeholder below.
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{figures/facility_map.pdf}
+  \fbox{\parbox{0.9\textwidth}{\centering [TODO: map of facilities coloured by cheapest LCOH pathway and feasibility]}}
+  \caption{Map of E-PRTR/LCP facilities showing least-cost heat pathway
+           (off-grid scenario) and solar feasibility.}
+  \label{fig:map}
+\end{figure}
+
+% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why Off-Grid Pricing Changes the Economics}
+% TODO: explain the mechanism — off-grid LCOE avoids grid charges,
+% network tariffs, and taxes that inflate industrial electricity prices.
+% Quantify the price gap (grid: 139--218 vs. off-grid: [TODO] EUR/MWh).
+
+\subsection{Limitations}
+% TODO — be explicit; journals appreciate this:
+\begin{itemize}
+  \item \textbf{National-average energy prices:} Gas and grid electricity
+        prices from Eurostat Band I3 are national averages; facility-level
+        prices may differ, particularly for the largest consumers.
+  \item \textbf{LCP 50 MW threshold:} Only plants with rated thermal input
+        $>$50 MW are included, likely understating true sectoral heat demand.
+  \item \textbf{Solar capacity factor vintage:} PVGIS data from 2023; may
+        not reflect long-run averages at all sites.
+  \item \textbf{No grid backup costs:} The off-grid scenario assumes
+        full self-supply; grid backup or curtailment costs are not modelled.
+  \item \textbf{Heat demand derivation:} Epsilon factors assume a fixed
+        technology mix per sector; actual facility mix may differ.
+  \item \textbf{Static cost assumptions:} BNEF 2025 costs used throughout;
+        technology costs are falling and results will evolve.
+\end{itemize}
+
+\subsection{Policy Implications}
+% TODO: where should industrial decarbonization incentives be concentrated?
+% Which sectors / geographies are lowest-hanging fruit?
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+% TODO: 2--3 paragraphs. No new information.
+%   Para 1 — restate the question and core finding.
+%   Para 2 — feasibility result and what drives it.
+%   Para 3 — policy takeaway and future work.
+
+% =====================================================================
+\section*{Data Availability}
+% TODO: state where data and code will be deposited (e.g., Zenodo, GitHub).
+
+\section*{Acknowledgements}
+% TODO
+
+\section*{Declaration of Interests}
+The authors declare no competing interests.
+
+% =====================================================================
+\bibliographystyle{apalike}   % or use a journal-specific .bst file
+\bibliography{references}     % point to your .bib file
+
+% =====================================================================
+\appendix
+\section{LCOH Calculation: Worked Example}
+\label{app:lcoh_example}
+
+% TODO: reproduce the worked example from the draft here as a sanity check.
+%   Gas price = 30.63 EUR/MWh LHV
+%   Energy component: (1/0.9) * 30.63 = 34.03 EUR/MWh_th
+%   Carbon component: 0.202 tCO2/MWh * 60 EUR/tCO2 = 12.12 EUR/MWh_th
+%   Fixed component: CRF * capex / (CF_plant * 8760) + opex ... [complete]
+
+\section{Epsilon Conversion Factors by Sector}
+\label{app:epsilon}
+% TODO: reproduce the epsilon reference table from eprtr_epsilon_reference.csv.
+
+\section{Country Proxying for BNEF Data}
+\label{app:proxying}
+% TODO: list the 26 proxied countries and their peer-country matches.
+
+\end{document}
